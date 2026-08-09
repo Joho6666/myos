@@ -9,5 +9,8 @@ These images are safe, non-sensitive product assets for the MyOS repository and 
 | `dashboard.png` | Desktop dashboard preview |
 | `dashboard-mobile.png` | Mobile dashboard preview |
 | `dashboard-concept.png` | Visual concept reference |
+| `dashboard-latest.png` | Latest Today Console screenshot |
+| `work-map-latest.png` | Latest Work Map screenshot |
+| `integrations-latest.png` | Latest Connections Dashboard screenshot |
 
 No local database, browser profile, uploaded file, environment variable, or API credential is included here.
