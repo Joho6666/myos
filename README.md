@@ -115,6 +115,14 @@ corepack pnpm desktop:dev
 
 它使用项目目录下的 `work/`，需要本机已装 Node 和 pnpm；桌面版 App 则使用 `%APPDATA%\MyOS` 且自带运行时。
 
+## Interface Preview
+
+<div align="center">
+  <img src="docs/assets/dashboard-latest.png" alt="MyOS 今日控制台" width="31%" />
+  <img src="docs/assets/work-map-latest.png" alt="MyOS 工作地图" width="31%" />
+  <img src="docs/assets/integrations-latest.png" alt="MyOS 连接看板" width="31%" />
+</div>
+
 ## Current Features
 
 - Local single-owner login guard
