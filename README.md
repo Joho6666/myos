@@ -71,6 +71,8 @@ The local agent binds only to `127.0.0.1`. The first phase does not open folders
 
 MyOS 已经可以打包成真正的 Windows 桌面应用：双击 `.exe` 打开 MyOS，内置启动本地助手、系统托盘、开机启动和桌面通知。
 
+最新安装包和便携版可从 [GitHub Releases](https://github.com/Joho6666/myos/releases) 下载；界面预览和应用图标位于 [`docs/assets`](./docs/assets)。
+
 Build:
 
 ```bash
