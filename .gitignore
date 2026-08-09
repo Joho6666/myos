@@ -1,0 +1,25 @@
+node_modules
+.next
+.next-dev
+out
+outputs
+.env
+.env*.local
+coverage
+playwright-report
+test-results
+*.tsbuildinfo
+work/server-data
+work/*
+!work/.gitkeep
+supabase/.temp
+supabase/.branches
+tools/supabase
+local-agent/agent.config.json
+
+# 桌面版打包产物
+dist
+desktop/build
+desktop/logs
+.env.local.buildbak
+.claude/settings.local.json

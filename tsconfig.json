@@ -1,0 +1,49 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    // 显式限定隐式加载的类型包。桌面版用 hoisted 依赖布局后，
+    // 构建工具链的传递依赖（如已废弃的 @types/minimatch 空壳包）
+    // 会出现在 node_modules/@types 下并被自动加载，导致编译失败。
+    "types": [
+      "node",
+      "react",
+      "react-dom"
+    ],
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "next-env.d.ts",
+    ".next-dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

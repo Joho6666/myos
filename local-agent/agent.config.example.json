@@ -1,0 +1,15 @@
+{
+  "port": 43110,
+  "authToken": "replace-with-local-random-token",
+  "allowedProjects": [
+    {
+      "id": "myos",
+      "name": "MyOS",
+      "path": "C:/Users/JOHO/Documents/Codex/2026-07-24/spreadsheets-plugin-spreadsheets-openai-primary-runtime",
+      "vscode": true
+    }
+  ],
+  "allowedScripts": [],
+  "ollamaBaseUrl": "http://127.0.0.1:11434",
+  "myosUrl": "http://127.0.0.1:3002"
+}

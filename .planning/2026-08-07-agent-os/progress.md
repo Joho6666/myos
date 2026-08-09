@@ -1,0 +1,49 @@
+# Progress
+
+## 2026-08-07
+
+- Created a scoped implementation plan for the Agent OS upgrade.
+- Confirmed existing MyOS architecture includes private projects, tasks, integrations, local agent support, Supabase migrations, and server-side data APIs.
+- Next: inspect exact project types, repositories, UI composition, and migration conventions before extending them.
+- Inspected the project data model, validation actions, project details, local agent, and initial migration.
+- Confirmed the implementation can extend the shared `MyOSData` state and existing action pipeline while retaining local fallback and Supabase modes.
+- Completed architecture inspection. A malformed search command did not change project state; the next inspection will use fixed-string searches.
+- Inspected local persistence, Supabase persistence, project UI, local-agent safety model, and environment configuration.
+- Implementation decision: add Agent OS records to `MyOSData`, use the existing authenticated action API, persist them in a dedicated Supabase migration, and expose a deliberately restricted CLI/MCP contract rather than arbitrary command execution.
+- Added Agent OS models, seed data, validation actions, local action reducer support, client data hooks, agent registry, and the project execution console UI.
+- Current local/desktop mode now persists Agent OS records through the existing atomic local data store. Next: extend Supabase persistence and add authenticated CLI/MCP integration.
+- Added Supabase Agent OS migration/mappings and a protected Agent OS command API, CLI, and MCP stdio server.
+- Typecheck found two narrow client-hook typing errors. The broad agent ID issue was corrected; one missing type import was corrected next. Re-running verification now.
+- Typecheck passed. Lint passed. Existing test suite passed: 6 files / 21 tests.
+- Browser validation found port 3000 serving an unrelated application. Next: run MyOS in isolation on another local port, then verify the Agent OS project page.
+- Production build passed. A local HTTP request then exposed a development-only Webpack runtime error caused by running the build and the isolated dev server concurrently against the same `.next` directory. The targeted recovery is to restart only the isolated port 3002 process.
+- Restarted only the isolated MyOS port 3002 server. `/login` now returns HTTP 200 and identifies MyOS.
+- Verified Agent OS command API returns HTTP 401 without a token and verified CLI command help. Next: document schema/architecture additions and finish final status updates.
+- Updated database and architecture documentation and added the dedicated Agent OS usage guide.
+- Final verification passed: `pnpm typecheck`, `pnpm lint`, `pnpm test` (22 tests), `pnpm build`, CLI/MCP syntax checks, MyOS login HTTP 200 on isolated port 3002, and unauthenticated CLI API rejection (HTTP 401).
+- The in-app browser could not reach the isolated local port because it runs in a separate browser environment; visual verification remains a local handoff check rather than a code or runtime failure.
+- Began Phase 11 to simplify MyOS after user feedback about option overload. Researched Linear, Notion, and Raycast patterns; implementation will focus on fewer primary workflows, visual summaries, and template-first entry.
+- Confirmed the command palette can remain the advanced entry point, allowing the visible workspace to focus on daily execution.
+- Implemented the simplified primary navigation, an operable mobile navigation menu, a visual project pulse dashboard, and template-first project creation. Typecheck passed; lint exposed two unused icon imports, which have now been removed before re-running checks.
+- Phase 11 verification passed: typecheck, lint, 22 tests, production build, and a local HTTP request to `/login` on the restarted isolated MyOS server (HTTP 200).
+- Began Phase 12 for persistent visual skins and practical mobile operation. The shared shell has been audited; this can be implemented without schema or Supabase changes.
+- Completed Phase 12: added four persisted skins, remembered color mode, a top-bar theme picker, and a fixed mobile dock with a More sheet. Verification passed: typecheck, lint, 22 tests, production build, and HTTP 200 from the restarted MyOS server on port 3002.
+- Researched current open-source personal OS and agent orchestration projects on GitHub to guide the next MyOS improvements; no code was changed in this research step.
+- Began Phase 13: the existing Agent OS domain can support a global control center without new tables or external-agent execution.
+- Implemented the Agent control center, exposed it through navigation/search/command actions, and added responsive layout styles. Typecheck passed; lint found one unused icon import, removed before the final checks.
+- Phase 13 verification passed: typecheck, lint, 22 tests, production build, and HTTP 200 from the restarted MyOS server on port 3002. The new `/app/agents` route is included in the production route manifest.
+- Began Phase 14: research confirms an actionable work map is a better next visualization than fabricated calendar charts; implementation will use existing persisted project/task/Agent records.
+- Implemented the interactive work-map route with project trees, execution distribution, load bars, and blocker focus. Typecheck passed; lint exposed two unused icon imports, removed before final checks.
+- Phase 14 verification passed: typecheck, lint, 22 tests, production build, and HTTP 200 from the restarted MyOS server on port 3002. The new `/app/work-map` route is included in the production route manifest.
+- Began Phase 15 after researching project template and insight approaches; no new schema is required for the improved creation flow or portfolio views.
+- Phase 15 completed: template-based project creation now opens the created project, and the Work Map now includes a real portfolio funnel and category distribution. Verification passed: typecheck, lint, 22 tests, production build, and HTTP 200 from the restarted MyOS server on port 3002.
+- Completed Capability Center implementation: private server-side Skill discovery, MyOS Agent MCP config generation, and API configuration overview. Typecheck, lint, and 22 tests passed. Production build was not rerun in this increment because the user-facing dev server remains active.
+- Upgraded the Capability Center with persistent per-agent context selection for Codex, Claude Code, OpenCode, Hermes, and OpenClaw. Typecheck, lint, and 22 tests passed; production build was not rerun while the local dev server remains active.
+- Added a local-only MCP configuration backend with preview, explicit apply, atomic replacement, and backups. Claude Code and OpenCode project integrations are supported; the UI calls it only through an authenticated MyOS server route. Typecheck passed; remaining verification is pending.
+- Phase 17 verification passed: `node --check`, typecheck, lint, 22 tests, production build, protected API rejection (401), local-agent startup on port 43110, and MyOS login HTTP 200 on port 3002. The remaining acceptance step requires an owner-session click through Preview then Apply against an allowlisted project, because local authentication secrets are intentionally not used in command output.
+- Began Phase 18 to reduce option overload without removing capability: the main navigation now uses five expandable work-context directories with direct second-level destinations. Mobile menus use the same hierarchy. Verification pending.
+- Phase 18 verification passed: typecheck, lint, 22 tests, and MyOS login HTTP 200 on port 3002. The active page can be refreshed to load the two-level sidebar and mobile directory menus.
+- Began Phase 19: added Electron main-process focus-window lifecycle, narrow preload IPC, tray/top-bar entry points, and a private `/focus` route that uses real MyOS tasks and active projects. Verification pending.
+- Phase 19 verification passed: Electron main/preload/tray syntax checks, typecheck, lint, 22 tests, production build with `/focus`, MyOS restart on port 3002, and unauthenticated `/focus` redirect to login.
+- Completed Phase 20: main window now persists geometry/maximized state, the global `Ctrl + Alt + Space` shortcut toggles the focus window, and Settings exposes desktop-only data/service controls. A fresh setup installer and portable executable were built; the portable MyOS app was launched successfully, and the development server was restored on port 3002.
+- Completed Phase 21: Agent Control Center now has a compact authenticated dispatch form with task templates, direct backend success/error handling, and clear handoff boundaries. Connections now has a catalog that separates actual connected platforms from direct setup and MCP-ready additions. Typecheck, lint, 22 tests, and production build passed; `/login` returned HTTP 200 and unauthenticated private routes returned HTTP 307 on port 3002 after the restart.

@@ -1,0 +1,29 @@
+# Findings
+
+- MyOS already has real project, task, integration, local-agent, server data, and Supabase migration layers.
+- The workspace has no Git metadata; edits must preserve existing files without relying on Git history.
+- `TASKS.md` records completed backend and integration work but does not yet include an agent orchestration module.
+- Existing project detail route is `src/app/app/projects/[id]/page.tsx`; PowerShell needs literal-path reads for the bracketed folder name.
+- The new design should extend existing project records rather than create a disconnected second project system.
+- `MyOSData` is the shared local/runtime shape. Current `Project` fields are intentionally compact and do not yet retain technical context, agent assignments, work-item status, or reports.
+- Mutations flow through a discriminated Zod action union, then a local action reducer or Supabase repository. This is the correct extension point for agent actions.
+- The project detail screen is currently a small client component backed by `useMyOSData`, so it can become the agent workspace without altering routing.
+- The existing local agent exposes authenticated health, Ollama, and allow-listed project metadata endpoints. It does not execute commands, which is a safe starting boundary for a future CLI/MCP surface.
+- The local data repository persists the complete `MyOSData` structure atomically, so Agent OS records will work immediately in local/desktop mode.
+- The Supabase repository reads and writes every entity explicitly, so a new migration plus explicit mappings is required for production persistence.
+- Project progress should be calculated in the client from agent work-item progress; the stored manual value is used only when no work items exist or when the owner selects manual mode.
+- The current local agent is deliberately read-only. CLI and MCP support must use a separately authenticated server adapter or a restricted local command contract; it must not become a general command runner.
+- Browser verification on `http://localhost:3000` reached an unrelated CheapVPN application. MyOS must be started on an isolated port for this validation; no other local process will be stopped.
+- The isolated MyOS server on port 3002 responds successfully after a targeted restart. The prior 500 was an artifact collision from concurrent development/build use, not an Agent OS source error.
+- CLI API correctly rejects requests without `MYOS_CLI_TOKEN` (HTTP 401), and the CLI help command loads successfully.
+- Reference research: Linear uses reusable project templates with preconfigured issues/milestones; Notion positions project/task templates alongside knowledge; Raycast keeps frequently used destinations as searchable quick links. These support template-first creation, fewer fixed navigation items, and contextual actions.
+- Current dashboard mixes daily execution, connections, inbox, activities, and shortcut links into one large surface. The primary sidebar exposes nearly every module at once, confirming the user's option-overload concern.
+- The existing command palette already supports direct capture, action search, and global search. It can carry advanced actions while navigation becomes smaller.
+- The visible mobile menu button has no navigation behavior, so the simplified information architecture also needs a functional compact mobile menu.
+- The shell currently has a single unpersisted dark toggle. There is no stored theme choice, no skin palette, and no mobile bottom navigation; these are shared-shell improvements that can benefit every module without changing database data.
+- GitHub research shows the most useful pattern for MyOS is not a single all-powerful agent dashboard: personal systems keep a small daily/project core, while agent systems add project-scoped work queues, approval gates, session telemetry, and a CLI/MCP surface as progressive layers.
+- MyOS already persists project briefs, technology stacks, agent assignments, work items, and reports. The largest remaining usability gap is a global agent view; these records currently require opening each individual project.
+- Visual-dashboard research supports a small set of actionable views: health/progress bars, workflow or dependency trees, state distribution, and highlighted blockers. MyOS does not yet record a reliable dated event series, so it should not present a decorative activity trend or contribution heatmap as if it were measured data.
+- Current project-management references use template-first creation followed by immediate access to the project workspace. They also use charts to expose item distribution and bottlenecks; MyOS can derive a portfolio funnel and category counts from its existing project, task, assignment, and report records.
+- CC Switch manages CLI configuration by application context, with provider cards and scoped Skills/MCP views. MyOS can safely replicate the context switch and configuration-template approach; automatic modification of third-party local config files needs a separate local-agent approval protocol.
+- Claude Code supports project-scoped `.mcp.json` entries under `mcpServers`; OpenCode supports project `opencode.json` entries under `mcp.servers`. Both support environment-variable references, so MyOS can avoid persisting `MYOS_CLI_TOKEN` in generated project configuration. Automatic writes are limited to these confirmed schemas.

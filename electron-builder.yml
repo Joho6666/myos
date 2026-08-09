@@ -1,0 +1,54 @@
+appId: com.myos.desktop
+productName: MyOS
+copyright: MyOS
+
+directories:
+  output: dist
+  buildResources: desktop/build
+
+# 只把 Electron 主进程代码打进 asar。
+# 项目根 node_modules 有 530MB 且是 pnpm 符号链接，绝不能进包
+# （Next 运行需要的依赖已由 standalone 自行追踪，见 extraResources）。
+files:
+  - desktop/electron/**/*
+  - package.json
+  - "!node_modules/**/*"
+  - "!src/**/*"
+  - "!.next/**/*"
+  - "!work/**/*"
+  - "!outputs/**/*"
+  - "!supabase/**/*"
+  - "!docs/**/*"
+  - "!tools/**/*"
+
+extraResources:
+  - from: .next/standalone
+    to: app
+  - from: local-agent/server.mjs
+    to: local-agent/server.mjs
+  - from: local-agent/agent.config.example.json
+    to: local-agent/agent.config.example.json
+  - from: desktop/build/icon.png
+    to: icon.png
+
+win:
+  icon: desktop/build/icon.png
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+    - target: dir
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: MyOS
+  artifactName: MyOS-Setup-${version}.${ext}
+
+portable:
+  artifactName: MyOS-${version}-portable.${ext}

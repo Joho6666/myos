@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'" />
+    <title>MyOS</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fafafa;
+        --fg: #18181b;
+        --muted: #71717a;
+        --accent: #2563eb;
+        --track: #e4e4e7;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #09090b;
+          --fg: #fafafa;
+          --muted: #a1a1aa;
+          --track: #27272a;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        user-select: none;
+      }
+      .mark {
+        width: 72px;
+        height: 72px;
+        border-radius: 18px;
+        background: var(--accent);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+      }
+      h1 { margin: 0; font-size: 17px; font-weight: 600; }
+      p { margin: 0; font-size: 13px; color: var(--muted); }
+      .track {
+        width: 200px;
+        height: 3px;
+        border-radius: 999px;
+        background: var(--track);
+        overflow: hidden;
+      }
+      .bar {
+        width: 40%;
+        height: 100%;
+        border-radius: 999px;
+        background: var(--accent);
+        animation: slide 1.4s ease-in-out infinite;
+      }
+      @keyframes slide {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(250%); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .bar { animation: none; width: 100%; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mark">M</div>
+    <h1>正在启动 MyOS</h1>
+    <p>本地服务与本地助手启动中，首次启动会稍慢。</p>
+    <div class="track"><div class="bar"></div></div>
+  </body>
+</html>
