@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bot, Braces, CheckCircle2, Clipboard, KeyRound, Loader2, Plug, RefreshCw, Search, Settings2, Wrench } from "lucide-react";
+import { Bot, Braces, CheckCircle2, Clipboard, Cpu, KeyRound, Loader2, Plug, RefreshCw, Search, Settings2, Wrench } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { agentRegistry, type KnownAgentId } from "@/features/agents/registry";
 
@@ -11,6 +11,7 @@ type CapabilityData = {
   mcpServers: Array<{ id: string; name: string; status: "ready" | "needs_config"; detail: string; config: string }>;
   apiFields: Array<{ key: string; label: string; group: string; configured: boolean; secret: boolean; description: string }>;
   localAgent: { configured: boolean; connected: boolean; message: string; projects: Array<{ id: string; name: string }> };
+  pythonAgent: { configured: boolean; connected: boolean; message: string; baseUrl: string; version?: string; myosConfigured?: boolean; agents: Array<{ id: string; label: string; available: boolean; executionMode: "manual" | "adapter"; detail: string }> };
 };
 
 type AgentMcpPreview = { supported: boolean; configured: boolean; applied?: boolean; target?: string; targetExists?: boolean; backup?: string | null; detail: string; confirmation?: string | null };
@@ -109,6 +110,18 @@ export default function CapabilitiesPage() {
         <button className="text-button" type="button" onClick={() => void previewLocalMcp()} disabled={configBusy || !data?.localAgent.connected || !projectId}><Search size={15} aria-hidden />预览</button>
       </div>
       {configPreview ? <div className="agent-config-result"><span className={`badge ${configPreview.configured ? "success" : "warning"}`}>{configPreview.configured ? "已配置" : configPreview.supported ? "待应用" : "需手动配置"}</span><p>{configPreview.detail}</p>{configPreview.target ? <small>目标文件：{configPreview.target}{configPreview.targetExists ? "（已有文件将先备份）" : "（将新建）"}</small> : null}{configPreview.supported && !configPreview.configured ? <button className="primary-button" type="button" onClick={() => void applyLocalMcp()} disabled={configBusy}>{configBusy ? <Loader2 className="spin" size={15} aria-hidden /> : <Plug size={15} aria-hidden />}确认应用并备份</button> : null}{configPreview.backup ? <small>已创建备份：{configPreview.backup}</small> : null}</div> : <small className="row-subtitle">{data?.localAgent.message || "正在读取本地助手状态。"}</small>}
+    </section>
+    <section className="panel runtime-status-panel">
+      <div className="panel-header"><h2><Cpu size={17} aria-hidden /> Python Agent Runtime</h2><span className={`badge ${data?.pythonAgent.connected ? "success" : "warning"}`}>{data?.pythonAgent.connected ? "在线" : "未连接"}</span></div>
+      <p className="row-subtitle">负责读取项目上下文、创建 Agent 工作项、接收心跳和汇报；当前不会执行任意电脑命令。</p>
+      <div className="runtime-status-grid">
+        <span>地址<strong>{data?.pythonAgent.baseUrl || "-"}</strong></span>
+        <span>版本<strong>{data?.pythonAgent.version || "-"}</strong></span>
+        <span>MyOS API<strong>{data?.pythonAgent.myosConfigured ? "已配置" : "待配置"}</strong></span>
+        <span>Agent 目标<strong>{data?.pythonAgent.agents.length || 0}</strong></span>
+      </div>
+      <p className="row-subtitle">{data?.pythonAgent.message || "正在读取运行时状态。"}</p>
+      <Link className="text-button" href="/app/settings">配置运行时</Link>
     </section>
     <div className="capability-summary">
       <div><Wrench size={18} aria-hidden /><span>已发现 Skills<strong>{data?.skills.length ?? "-"}</strong></span></div>

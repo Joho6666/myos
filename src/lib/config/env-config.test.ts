@@ -10,6 +10,7 @@ describe("validateRuntimeConfigUpdates", () => {
       OLLAMA_BASE_URL: "http://localhost:11434",
       N8N_BASE_URL: "https://n8n.example.com",
       LOCAL_AGENT_BASE_URL: "http://127.0.0.1:43110",
+      PYTHON_AGENT_BASE_URL: "http://127.0.0.1:43200",
       N8N_REQUEST_TIMEOUT_MS: "30000",
       SUPABASE_STORAGE_BUCKET: "myos-files",
       SUPABASE_OWNER_USER_ID: "00000000-0000-4000-8000-000000000001"
@@ -24,6 +25,14 @@ describe("validateRuntimeConfigUpdates", () => {
     expect(() => validateRuntimeConfigUpdates({
       LOCAL_AGENT_BASE_URL: "not-a-url"
     })).toThrow(ConfigValidationError);
+
+    expect(() => validateRuntimeConfigUpdates({
+      PYTHON_AGENT_BASE_URL: "not-a-url"
+    })).toThrow(ConfigValidationError);
+
+    expect(() => validateRuntimeConfigUpdates({
+      PYTHON_AGENT_BASE_URL: "https://example.com"
+    })).toThrow("本机回环地址");
   });
 
   it("rejects invalid timeout and bucket values", () => {

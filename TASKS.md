@@ -193,3 +193,13 @@
 - [x] Create a backup before replacing an existing project configuration file.
 - [x] Keep `MYOS_CLI_TOKEN` as an environment-variable reference, never a generated secret value.
 - [x] Run typecheck, lint, tests, production build, protected route, and local startup checks.
+
+## Phase 18 - Python Agent Runtime
+
+- [x] Add a loopback-only FastAPI Agent Runtime with a separate runtime token.
+- [x] Add MyOS project context, work-item creation, heartbeat, and report endpoints.
+- [x] Register Codex, Claude Code, OpenCode, Hermes, and OpenClaw without launching executables.
+- [x] Show Python Agent Runtime status in the Capability Center.
+- [x] Document the optional sidecar and future fixed-executable desktop packaging boundary.
+- [ ] Add one reviewed allow-listed Agent execution adapter after its CLI contract is verified.
+- [ ] Run the full web and desktop verification after the runtime integration.

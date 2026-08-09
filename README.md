@@ -157,6 +157,7 @@ corepack pnpm desktop:dev
 - Connection dashboard for GitHub, Gmail, Notion, Supabase, AI, and n8n
 - Gmail message intake into Inbox and Gmail attachment intake into File Center
 - Read-only Windows local-agent status page for local helper, Ollama, and allowlisted projects
+- Optional Python Agent Runtime for project context, Agent work items, heartbeats, and evidence reports
 - Supabase migration with RLS policies
 
 ## Known Limits
@@ -171,6 +172,7 @@ corepack pnpm desktop:dev
 - Gmail summary and attachment import require Google OAuth variables. Attachment import saves files through the same protected local/Supabase Storage pipeline as ordinary uploads.
 - Encrypted vault storage is planned but not implemented.
 - Offline mode currently provides an offline page and local quick-draft helper; full service worker caching is a later step.
+- The Python Agent Runtime is an optional local sidecar. Phase 1 records Agent work and evidence but does not launch arbitrary local commands or Agent executables.
 
 ## Checks
 

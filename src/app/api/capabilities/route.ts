@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { readRuntimeConfig } from "@/lib/config/env-config";
 import { getLocalAgentStatus } from "@/lib/local-agent/client";
+import { getPythonAgentStatus } from "@/lib/python-agent/client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,7 +35,7 @@ async function readSkills(directory: string, relative = "", depth = 0): Promise<
 export async function GET() {
   if (!await getSession()) return NextResponse.json({ error: "需要先登录 MyOS。" }, { status: 401 });
 
-  const [configured, localAgent] = await Promise.all([readRuntimeConfig(), getLocalAgentStatus()]);
+  const [configured, localAgent, pythonAgent] = await Promise.all([readRuntimeConfig(), getLocalAgentStatus(), getPythonAgentStatus()]);
   const fields = configured.filter((field) => ["database", "ai", "automation", "external"].includes(field.group)).map((field) => ({
     key: field.key, label: field.label, group: field.group, configured: field.configured, secret: field.secret, description: field.description
   }));
@@ -57,6 +58,7 @@ export async function GET() {
       connected: localAgent.connected,
       message: localAgent.message,
       projects: localAgent.projects.map((project) => ({ id: project.id, name: project.name }))
-    }
+    },
+    pythonAgent
   });
 }

@@ -83,3 +83,23 @@ Project detail UI or CLI/MCP client
 ```
 
 The external Agent interface is intentionally restricted to reading project briefs, creating Agent work items, and reporting progress. `docs/AGENT-OS.md` documents the local CLI and stdio MCP server. It does not invoke local executables or expose arbitrary shell commands; that future capability belongs behind the separate allow-listed Windows local agent.
+
+## Python Agent Runtime
+
+The optional Python sidecar adds a language-neutral orchestration boundary
+without replacing the Next.js application or repository layer:
+
+```text
+Agent CLI / MCP / future desktop adapter
+  -> Python FastAPI runtime (127.0.0.1:43200, separate token)
+  -> MyOS Agent API (MYOS_CLI_TOKEN)
+  -> local repository or Supabase repository
+  -> project context / work item / heartbeat / report / evidence
+```
+
+The sidecar has no arbitrary shell endpoint. Its Phase 1 Agent registry is a
+controlled catalog with manual execution mode, so a registered Agent name is
+not treated as proof that a process is installed or running. A future adapter
+must define an executable allow-list, project scope, confirmation policy,
+timeouts, sanitized output, and tests before Electron or the service can launch
+it.

@@ -19,6 +19,8 @@
     "local-agent": "node local-agent/server.mjs",
     "agent:cli": "node tools/myos-agent-cli.mjs",
     "agent:mcp": "node tools/myos-agent-mcp.mjs",
+    "python-agent:dev": "python python-agent/server.py",
+    "python-agent:test": "python -m unittest discover -s python-agent/tests -p \"test_*.py\"",
     "desktop:icon": "node desktop/scripts/make-icon.mjs",
     "desktop:prepare": "node desktop/scripts/build-app.mjs",
     "desktop:dev": "node desktop/scripts/build-app.mjs && electron desktop/electron/main.js",

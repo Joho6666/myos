@@ -23,3 +23,10 @@ desktop/build
 desktop/logs
 .env.local.buildbak
 .claude/settings.local.json
+
+# Python Agent Runtime
+.venv
+python-agent/.venv
+__pycache__
+*.py[cod]
+.pytest_cache

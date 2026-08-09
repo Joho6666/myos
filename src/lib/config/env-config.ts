@@ -37,7 +37,9 @@ export const configFields: ConfigField[] = [
   { key: "GOOGLE_CLIENT_SECRET", label: "Google Client Secret", group: "external", secret: true, description: "用于 Gmail OAuth，只保存在服务端。" },
   { key: "GOOGLE_REFRESH_TOKEN", label: "Google Refresh Token", group: "external", secret: true, description: "用于服务端刷新 Gmail access token。" },
   { key: "LOCAL_AGENT_BASE_URL", label: "Local Agent URL", group: "external", secret: false, description: "Windows 本地助手地址，仅服务端调用。", placeholder: "http://127.0.0.1:43110" },
-  { key: "LOCAL_AGENT_TOKEN", label: "Local Agent Token", group: "external", secret: true, description: "MyOS 服务端调用本地助手使用的本地密钥。" }
+  { key: "LOCAL_AGENT_TOKEN", label: "Local Agent Token", group: "external", secret: true, description: "MyOS 服务端调用本地助手使用的本地密钥。" },
+  { key: "PYTHON_AGENT_BASE_URL", label: "Python Agent Runtime URL", group: "external", secret: false, description: "本机 Python Agent Runtime 地址，仅服务端调用。", placeholder: "http://127.0.0.1:43200" },
+  { key: "MYOS_PYTHON_AGENT_TOKEN", label: "Python Agent Runtime Token", group: "external", secret: true, description: "MyOS 服务端访问 Python Agent Runtime 使用的本地密钥。" }
 ];
 
 const envLocalPath = runtimeEnvLocalPath;
@@ -94,6 +96,17 @@ function validateUrl(value: string, label: string) {
   }
 }
 
+function validateLoopbackUrl(value: string, label: string) {
+  try {
+    const url = new URL(value);
+    if (!['127.0.0.1', 'localhost', '[::1]', '::1'].includes(url.hostname)) {
+      throw new Error('not loopback');
+    }
+  } catch {
+    throw new ConfigValidationError(`${label} 必须指向本机回环地址。`);
+  }
+}
+
 function validateRuntimeConfigValue(field: ConfigField, value: string) {
   if (!value) return;
 
@@ -105,9 +118,11 @@ function validateRuntimeConfigValue(field: ConfigField, value: string) {
     throw new ConfigValidationError("会话签名密钥至少需要 32 个字符。");
   }
 
-  if (["NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_SUPABASE_URL", "OLLAMA_BASE_URL", "N8N_BASE_URL", "LOCAL_AGENT_BASE_URL"].includes(field.key)) {
+  if (["NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_SUPABASE_URL", "OLLAMA_BASE_URL", "N8N_BASE_URL", "LOCAL_AGENT_BASE_URL", "PYTHON_AGENT_BASE_URL"].includes(field.key)) {
     validateUrl(value, field.label);
   }
+
+  if (field.key === "PYTHON_AGENT_BASE_URL") validateLoopbackUrl(value, field.label);
 
   if (field.key === "N8N_REQUEST_TIMEOUT_MS") {
     const timeout = Number(value);

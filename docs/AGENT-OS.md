@@ -89,3 +89,41 @@ When the Windows local agent is configured and a project is present in its `allo
 - OpenCode: `opencode.json` with `mcp.servers.myos`.
 
 Both configurations write the configured local MyOS address and reference `MYOS_CLI_TOKEN` from the local environment rather than embedding the token. Existing target files are copied to the local-agent `backups` directory before replacement. Codex, Hermes, and OpenClaw remain manual/template integrations until their formats are individually verified and allowlisted.
+
+## Python Agent Runtime
+
+MyOS also includes an optional local FastAPI sidecar under `python-agent/`.
+It is the first Python-based runtime layer for Agent orchestration:
+
+- reads a project brief from the existing MyOS Agent API;
+- creates Agent work items;
+- sends progress heartbeats;
+- stores structured reports, changed-file claims, test notes, and artifact links;
+- exposes registered targets for Codex, Claude Code, OpenCode, Hermes, and OpenClaw.
+
+The runtime is deliberately not an arbitrary command runner. In Phase 1 every
+target reports `executionMode: manual`; no local executable is launched by the
+Python service. This keeps the project context and evidence path useful before
+we verify an individual Agent CLI and add an explicit allow-list adapter.
+
+Start it locally with:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r python-agent\requirements.txt
+$env:MYOS_URL = "http://127.0.0.1:3002"
+$env:MYOS_CLI_TOKEN = "<the same local MyOS CLI token>"
+$env:MYOS_PYTHON_AGENT_TOKEN = "<a separate local runtime token>"
+python python-agent\server.py
+```
+
+The default address is `http://127.0.0.1:43200`. Configure
+`PYTHON_AGENT_BASE_URL` and `MYOS_PYTHON_AGENT_TOKEN` in MyOS settings to make
+the status visible in the Capability Center. The runtime token is separate
+from `MYOS_CLI_TOKEN` and neither token is sent to the browser.
+
+The current endpoints are documented in `python-agent/README.md`. The safe
+desktop packaging path is to build a fixed PyInstaller executable in a later
+release; the current Electron package does not silently depend on a system
+Python installation.
