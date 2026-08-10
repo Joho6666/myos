@@ -81,8 +81,8 @@ corepack pnpm desktop:build
 
 产物在 `dist/`：
 
-- `MyOS-Setup-0.1.1.exe` —— NSIS 安装程序
-- `MyOS-0.1.1-portable.exe` —— 便携版
+- `MyOS-Setup-0.1.2.exe` —— NSIS 安装程序
+- `MyOS-0.1.2-portable.exe` —— 便携版
 - `win-unpacked/` —— 免解压目录版
 
 开发态调试（不打包）：
@@ -91,7 +91,7 @@ corepack pnpm desktop:build
 corepack pnpm desktop:dev
 ```
 
-桌面版把数据写在 `%APPDATA%\MyOS`（`.env.local`、`server-data`、`uploads`、`logs`），安装目录保持只读。安装包内**不含任何密钥** —— 首次启动生成空白配置，Supabase、OpenAI 等在 `/app/settings` 里填写，保存后立即生效。
+桌面版把数据写在 `%APPDATA%\MyOS`（`.env.local`、`server-data`、`uploads`、`logs`），安装目录保持只读。安装包内**不含任何密钥** —— 首次启动会自动生成本机的会话签名密钥，Supabase、OpenAI 等在 `/app/settings` 里填写，保存后立即生效。
 
 目标机器不需要安装 Node.js 或 pnpm，Electron 自带的 Node 会运行 Next 服务端和本地助手。
 

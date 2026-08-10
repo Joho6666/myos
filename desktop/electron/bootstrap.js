@@ -7,11 +7,13 @@ const paths = require("./paths");
 
 const AGENT_PORT = 43110;
 
-// 与 .env.example 保持一致的键顺序。桌面版首次启动生成空白模板：
+// 与 .env.example 保持一致的键顺序。桌面版首次启动生成配置模板：
 // 安装包内不含任何密钥，用户在 /app/settings 里自行填写。
 const ENV_TEMPLATE = `NEXT_PUBLIC_APP_NAME=MyOS
 NEXT_PUBLIC_APP_URL=
 OWNER_EMAIL=
+MYOS_TIME_ZONE=Asia/Shanghai
+MYOS_SESSION_SECRET=
 
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
@@ -42,8 +44,24 @@ function ensureDirs() {
 }
 
 function ensureEnvLocal() {
+  const sessionSecret = crypto.randomBytes(32).toString("hex");
+
   if (!fs.existsSync(paths.envLocalPath)) {
-    fs.writeFileSync(paths.envLocalPath, ENV_TEMPLATE, "utf8");
+    fs.writeFileSync(
+      paths.envLocalPath,
+      ENV_TEMPLATE.replace("MYOS_SESSION_SECRET=", `MYOS_SESSION_SECRET=${sessionSecret}`),
+      "utf8"
+    );
+    return;
+  }
+
+  // 旧版本首次启动只创建了空白模板，升级时补齐会话密钥但不覆盖用户已有配置。
+  const current = fs.readFileSync(paths.envLocalPath, "utf8");
+  if (!/^\s*MYOS_SESSION_SECRET\s*=\s*\S.*$/m.test(current)) {
+    const next = /^\s*MYOS_SESSION_SECRET\s*=.*$/m.test(current)
+      ? current.replace(/^\s*MYOS_SESSION_SECRET\s*=.*$/m, `MYOS_SESSION_SECRET=${sessionSecret}`)
+      : `${current.replace(/\s*$/, "")}\nMYOS_SESSION_SECRET=${sessionSecret}\n`;
+    fs.writeFileSync(paths.envLocalPath, next, "utf8");
   }
 }
 

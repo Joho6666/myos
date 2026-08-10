@@ -34,7 +34,7 @@ Electron 主进程 (desktop/electron/main.js)
 
 ```
 %APPDATA%\MyOS\
-├── .env.local              首次启动生成的空白模板
+├── .env.local              首次启动生成的配置，会自动包含本机会话签名密钥
 ├── agent.config.json       本地助手配置，token 每台机器随机生成
 ├── server-data\
 │   └── myos-data.json      本地文件模式的数据
@@ -137,8 +137,8 @@ electron-builder --win                 # 打三种产物
 
 产物在 `dist/`：
 
-- `MyOS-Setup-0.1.0.exe` —— NSIS 安装程序，可选安装路径，建桌面和开始菜单快捷方式
-- `MyOS-0.1.0-portable.exe` —— 便携版单文件
+- `MyOS-Setup-0.1.2.exe` —— NSIS 安装程序，可选安装路径，建桌面和开始菜单快捷方式
+- `MyOS-0.1.2-portable.exe` —— 便携版单文件
 - `win-unpacked/` —— 免解压目录版，方便调试
 
 开发态调试（不打包，最快）：
