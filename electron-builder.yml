@@ -6,6 +6,9 @@ directories:
   output: dist
   buildResources: desktop/build
 
+# Next standalone 已经携带运行时依赖；桌面打包阶段不应再次触发 pnpm install。
+npmRebuild: false
+
 # 只把 Electron 主进程代码打进 asar。
 # 项目根 node_modules 有 530MB 且是 pnpm 符号链接，绝不能进包
 # （Next 运行需要的依赖已由 standalone 自行追踪，见 extraResources）。

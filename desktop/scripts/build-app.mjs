@@ -46,7 +46,7 @@ process.on("SIGTERM", () => {
 /** 剔除所有 MyOS 相关变量，避免任何值被内联进产物 */
 function cleanEnv() {
   const stripped = {};
-  const drop = /^(NEXT_PUBLIC_|SUPABASE_|OPENAI_|OPENROUTER_|OLLAMA_|N8N_|GITHUB_|NOTION_|GOOGLE_|LOCAL_AGENT_|OWNER_EMAIL)/;
+  const drop = /^(NEXT_PUBLIC_|SUPABASE_|OPENAI_|OPENROUTER_|DEEPSEEK_|OLLAMA_|N8N_|GITHUB_|NOTION_|GOOGLE_|LOCAL_AGENT_|PYTHON_AGENT_|MYOS_PYTHON_AGENT_|MYOS_CLI_TOKEN|MYOS_URL|MYOS_PORT|OWNER_EMAIL)/;
 
   for (const [key, value] of Object.entries(process.env)) {
     if (drop.test(key)) continue;
@@ -143,7 +143,7 @@ function run() {
  *   - react-dom-experimental / react-server-dom-*-experimental / *-turbopack /
  *     scheduler-experimental：React 实验构建，生产 standalone 走稳定版 react-dom
  *   - webpack / schema-utils* / loader-utils* / loader-runner / babel-packages /
- *     babel-code-frame / terser / acorn：构建期转译/打包依赖，standalone server 不编译代码
+ *     terser / acorn：构建期转译/打包依赖，standalone server 不编译代码
  *   - amphtml-validator：仅用于 AMP 校验（MyOS 无 AMP 页）
  *   - next-devtools：开发覆盖层
  *   - @mswjs / node-html-parser / conf / json5 / source-map08 / postcss-safe-parser /
@@ -163,7 +163,7 @@ function copyNextRuntime(standaloneDir, projectRoot) {
   const dropSubdirs = new Set([
     "amphtml-validator", "webpack", "webpack-sources1", "webpack-sources3",
     "schema-utils2", "schema-utils3", "loader-utils2", "loader-utils3", "loader-runner",
-    "babel-packages", "babel-code-frame", "terser", "next-devtools",
+    "babel-packages", "terser", "next-devtools",
     "postcss-safe-parser", "acorn", "node-html-parser", "@mswjs", "source-map08",
     "json5", "conf", "shell-quote", "css.escape", "postcss-plugin-stub-for-cssnano-simple", "anser",
     "react-dom-experimental", "react-experimental",

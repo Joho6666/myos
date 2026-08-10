@@ -81,8 +81,8 @@ corepack pnpm desktop:build
 
 产物在 `dist/`：
 
-- `MyOS-Setup-0.1.0.exe` —— NSIS 安装程序
-- `MyOS-0.1.0-portable.exe` —— 便携版
+- `MyOS-Setup-0.1.1.exe` —— NSIS 安装程序
+- `MyOS-0.1.1-portable.exe` —— 便携版
 - `win-unpacked/` —— 免解压目录版
 
 开发态调试（不打包）：
