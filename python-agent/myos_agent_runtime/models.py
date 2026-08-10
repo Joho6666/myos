@@ -3,7 +3,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 
-AgentId = Literal["codex", "claude-code", "opencode", "hermes", "openclaw"]
+AgentId = Literal["codex", "claude-code", "opencode", "copilot", "hermes", "openclaw"]
 WorkStatus = Literal["queued", "in_progress", "blocked", "completed"]
 
 

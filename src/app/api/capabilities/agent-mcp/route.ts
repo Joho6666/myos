@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const bodySchema = z.object({
-  agentId: z.enum(["codex", "claude-code", "opencode", "hermes", "openclaw"]),
+  agentId: z.enum(["codex", "claude-code", "opencode", "copilot", "hermes", "openclaw"]),
   projectId: z.string().trim().min(1).max(200),
   confirmation: z.string().trim().max(80).optional()
 });

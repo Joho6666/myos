@@ -141,6 +141,7 @@ corepack pnpm desktop:dev
 - File center with local upload, Supabase private Storage upload, signed download, file registration, and delete
 - Automation status page
 - AI provider status page
+- OpenAI-compatible DeepSeek Provider through the server-only `DEEPSEEK_API_KEY`
 - Tool registry
 - Today workspace
 - Life areas
@@ -168,11 +169,12 @@ corepack pnpm desktop:dev
 - File upload works through the protected server API. Local mode stores binaries under `work/uploads`; Supabase mode stores binaries in the private `SUPABASE_STORAGE_BUCKET` bucket and downloads through short-lived signed URLs.
 - Data export downloads MyOS records as JSON. It does not export `.env.local` secrets or original file binaries.
 - Data import accepts MyOS JSON backup files and replaces current records after confirmation. It restores file records only, not missing original files.
-- AI and n8n integrations show real unconfigured states until server environment variables are provided.
+- AI and n8n integrations show real unconfigured states until server environment variables are provided. DeepSeek is configured in `/app/settings` and used from `/app/ai`.
 - Gmail summary and attachment import require Google OAuth variables. Attachment import saves files through the same protected local/Supabase Storage pipeline as ordinary uploads.
 - Encrypted vault storage is planned but not implemented.
 - Offline mode currently provides an offline page and local quick-draft helper; full service worker caching is a later step.
 - The Python Agent Runtime is an optional local sidecar. Phase 1 records Agent work and evidence but does not launch arbitrary local commands or Agent executables.
+- Codex CLI and GitHub Copilot CLI are registered local Agent targets. Their machine credentials stay in their own CLI authentication stores; a verified allow-listed execution adapter is still required before MyOS launches either CLI.
 
 ## Checks
 

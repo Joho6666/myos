@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { ConfigValidationError, validateRuntimeConfigUpdates } from "./env-config";
+import { ConfigValidationError, configFields, validateRuntimeConfigUpdates } from "./env-config";
 
 describe("validateRuntimeConfigUpdates", () => {
+  it("exposes DeepSeek in the AI configuration group", () => {
+    expect(configFields.find((field) => field.key === "DEEPSEEK_API_KEY")).toMatchObject({ group: "ai", secret: true });
+  });
+
   it("accepts valid runtime configuration values", () => {
     expect(() => validateRuntimeConfigUpdates({
       OWNER_EMAIL: "owner@example.com",

@@ -98,7 +98,7 @@ export const myOSActionSchema = z.discriminatedUnion("type", [
     type: z.literal("assignProjectAgent"),
     payload: z.object({
       projectId: requiredText,
-      agentId: z.enum(["codex", "claude-code", "opencode", "hermes", "openclaw"]),
+      agentId: z.enum(["codex", "claude-code", "opencode", "copilot", "hermes", "openclaw"]),
       role: requiredText
     })
   }),
@@ -106,7 +106,7 @@ export const myOSActionSchema = z.discriminatedUnion("type", [
     type: z.literal("addAgentWorkItem"),
     payload: z.object({
       projectId: requiredText,
-      agentId: z.enum(["codex", "claude-code", "opencode", "hermes", "openclaw"]),
+      agentId: z.enum(["codex", "claude-code", "opencode", "copilot", "hermes", "openclaw"]),
       title: requiredText,
       instructions: longText
     })
@@ -130,7 +130,7 @@ export const myOSActionSchema = z.discriminatedUnion("type", [
     payload: z.object({
       projectId: requiredText,
       workItemId: optionalText,
-      agentId: z.enum(["codex", "claude-code", "opencode", "hermes", "openclaw"]),
+      agentId: z.enum(["codex", "claude-code", "opencode", "copilot", "hermes", "openclaw"]),
       summary: longText.min(1),
       progress: z.number().min(0).max(100),
       status: z.enum(["queued", "in_progress", "blocked", "completed"]).optional(),

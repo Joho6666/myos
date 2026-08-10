@@ -61,7 +61,7 @@ class RuntimeTests(TestCase):
             headers={"Authorization": "Bearer runtime"},
         )
         self.assertEqual(authorized.status_code, 200)
-        self.assertEqual(len(authorized.json()["agents"]), 5)
+        self.assertEqual(len(authorized.json()["agents"]), 6)
 
     def test_create_job_uses_myos_context_and_returns_manual_mode(self):
         def handler(request: httpx.Request):

@@ -123,16 +123,16 @@ export function useMyOSData() {
       deleteProjectRisk(id: string) {
         return mutate("deleteProjectRisk", { id });
       },
-      assignProjectAgent(input: { projectId: string; agentId: "codex" | "claude-code" | "opencode" | "hermes" | "openclaw"; role: string }) {
+      assignProjectAgent(input: { projectId: string; agentId: "codex" | "claude-code" | "opencode" | "copilot" | "hermes" | "openclaw"; role: string }) {
         return mutate("assignProjectAgent", input);
       },
-      addAgentWorkItem(input: { projectId: string; agentId: "codex" | "claude-code" | "opencode" | "hermes" | "openclaw"; title: string; instructions: string }) {
+      addAgentWorkItem(input: { projectId: string; agentId: "codex" | "claude-code" | "opencode" | "copilot" | "hermes" | "openclaw"; title: string; instructions: string }) {
         return mutate("addAgentWorkItem", input);
       },
       updateAgentWorkItem(input: Pick<AgentWorkItem, "id" | "status" | "progress"> & Partial<Pick<AgentWorkItem, "blockedReason" | "result" | "changedFiles" | "testResult" | "artifactUrl">> & { eventMessage?: string }) {
         return mutate("updateAgentWorkItem", input);
       },
-      addAgentReport(input: { projectId: string; workItemId?: string; agentId: "codex" | "claude-code" | "opencode" | "hermes" | "openclaw"; summary: string; progress: number; status?: AgentWorkItem["status"]; blockedReason?: string; changedFiles?: string[]; testResult?: string; artifactUrl?: string }) {
+      addAgentReport(input: { projectId: string; workItemId?: string; agentId: "codex" | "claude-code" | "opencode" | "copilot" | "hermes" | "openclaw"; summary: string; progress: number; status?: AgentWorkItem["status"]; blockedReason?: string; changedFiles?: string[]; testResult?: string; artifactUrl?: string }) {
         return mutate("addAgentReport", input);
       },
       toggleTask(id: string) {

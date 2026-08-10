@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { AlertTriangle, ArrowRight, Bot, CheckCircle2, CircleDashed, ClipboardPlus, FolderKanban, PauseCircle, Send } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { agentRegistry, getAgent } from "@/features/agents/registry";
+import { agentRegistry, getAgent, type KnownAgentId } from "@/features/agents/registry";
 import { postMyOSAction, publishMyOSData } from "@/lib/data/client-actions";
 import { useMyOSData } from "@/lib/data/store";
 
@@ -50,7 +50,7 @@ export function AgentControlCenter() {
         type: "addAgentWorkItem",
         payload: {
           projectId,
-          agentId: agentId as "codex" | "claude-code" | "opencode" | "hermes" | "openclaw",
+          agentId: agentId as KnownAgentId,
           title: title.trim(),
           instructions: instructions.trim()
         }

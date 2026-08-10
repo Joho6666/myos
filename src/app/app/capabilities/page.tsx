@@ -32,6 +32,7 @@ export default function CapabilitiesPage() {
     codex: { skill: "共享 Skill 目录", mcp: "stdio MCP", api: "环境变量 / Provider" },
     "claude-code": { skill: "共享 Skill 目录", mcp: "stdio MCP", api: "环境变量 / Provider" },
     opencode: { skill: "共享 Skill 目录", mcp: "stdio MCP", api: "环境变量 / Provider" },
+    copilot: { skill: "共享 Skill 目录", mcp: "通过本地适配", api: "Copilot 登录 / BYOK" },
     hermes: { skill: "共享 Skill 目录", mcp: "stdio MCP", api: "环境变量 / Provider" },
     openclaw: { skill: "通过本地适配", mcp: "stdio MCP", api: "环境变量 / Provider" }
   };

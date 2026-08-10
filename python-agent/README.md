@@ -59,6 +59,11 @@ Example job request:
 }
 ```
 
+Registered Agent targets also include Claude Code, OpenCode, GitHub Copilot CLI,
+Hermes, and OpenClaw. They are manual targets in Phase 1: the runtime records
+project context, work items, heartbeats, and reports without launching an
+arbitrary local process.
+
 ## Desktop boundary
 
 The current Electron app still starts the Next.js server and the Node local

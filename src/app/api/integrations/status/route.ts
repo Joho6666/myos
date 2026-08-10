@@ -146,6 +146,9 @@ async function aiStatus(): Promise<IntegrationStatus> {
   if (process.env.OPENROUTER_API_KEY?.trim()) {
     checks.push({ name: "OpenRouter", run: (signal) => fetch("https://openrouter.ai/api/v1/models", { headers: { authorization: `Bearer ${process.env.OPENROUTER_API_KEY}` }, signal }) });
   }
+  if (process.env.DEEPSEEK_API_KEY?.trim()) {
+    checks.push({ name: "DeepSeek", run: (signal) => fetch("https://api.deepseek.com/models", { headers: { authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}` }, signal }) });
+  }
   const ollamaUrl = process.env.OLLAMA_BASE_URL?.trim();
   if (ollamaUrl) {
     const normalizedOllamaUrl = ollamaUrl.replace(/\/$/, "");
@@ -153,7 +156,7 @@ async function aiStatus(): Promise<IntegrationStatus> {
   }
 
   if (!checks.length) {
-    return { id: "ai", name: "AI Providers", category: "AI", state: "unconfigured", message: "等待配置 OpenAI、OpenRouter 或 Ollama", detail: "用于 AI 工作台、提示词运行和后续智能汇总。" };
+    return { id: "ai", name: "AI Providers", category: "AI", state: "unconfigured", message: "等待配置 OpenAI、OpenRouter、DeepSeek 或 Ollama", detail: "用于 AI 工作台、提示词运行和后续智能汇总。" };
   }
 
   const results = await Promise.all(checks.map(async (check) => {
@@ -168,7 +171,7 @@ async function aiStatus(): Promise<IntegrationStatus> {
   if (connected.length) {
     return { id: "ai", name: "AI Providers", category: "AI", state: "connected", message: `可用：${connected.join("、")}`, detail: "至少一个 AI Provider 已通过服务端健康检查。" };
   }
-  return { id: "ai", name: "AI Providers", category: "AI", state: "error", message: "已配置但无法访问", detail: "请检查 AI 密钥、Ollama 服务和网络连接。" };
+  return { id: "ai", name: "AI Providers", category: "AI", state: "error", message: "已配置但无法访问", detail: "请检查 AI 密钥、DeepSeek 服务、Ollama 服务和网络连接。" };
 }
 
 export async function GET() {

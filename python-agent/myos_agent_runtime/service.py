@@ -14,7 +14,7 @@ from .models import (
 AGENT_TARGETS: tuple[AgentRuntimeTarget, ...] = (
     AgentRuntimeTarget(
         id="codex",
-        label="Codex",
+        label="Codex CLI",
         executionMode="manual",
         detail="Registered target. Phase 1 records context and evidence; execution adapter is not enabled.",
     ),
@@ -29,6 +29,12 @@ AGENT_TARGETS: tuple[AgentRuntimeTarget, ...] = (
         label="OpenCode",
         executionMode="manual",
         detail="Registered target. Execution remains allow-list based and disabled in Phase 1.",
+    ),
+    AgentRuntimeTarget(
+        id="copilot",
+        label="GitHub Copilot CLI",
+        executionMode="manual",
+        detail="Registered target. Authenticate locally with Copilot CLI; MyOS does not read or store its local credential.",
     ),
     AgentRuntimeTarget(
         id="hermes",

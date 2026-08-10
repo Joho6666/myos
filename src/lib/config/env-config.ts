@@ -27,6 +27,7 @@ export const configFields: ConfigField[] = [
   { key: "SUPABASE_STORAGE_BUCKET", label: "Supabase Storage Bucket", group: "database", secret: false, description: "私有文件 bucket 名称。默认 myos-files。", placeholder: "myos-files" },
   { key: "OPENAI_API_KEY", label: "OpenAI API Key", group: "ai", secret: true, description: "用于 AI 工作台 OpenAI Provider。" },
   { key: "OPENROUTER_API_KEY", label: "OpenRouter API Key", group: "ai", secret: true, description: "用于 AI 工作台 OpenRouter Provider。" },
+  { key: "DEEPSEEK_API_KEY", label: "DeepSeek API Key", group: "ai", secret: true, description: "用于 AI 工作台 DeepSeek Provider，兼容 OpenAI 风格接口。" },
   { key: "OLLAMA_BASE_URL", label: "Ollama Base URL", group: "ai", secret: false, description: "本地 Ollama 地址。", placeholder: "http://localhost:11434" },
   { key: "N8N_BASE_URL", label: "n8n Base URL", group: "automation", secret: false, description: "n8n Webhook 基础地址。" },
   { key: "N8N_WEBHOOK_SECRET", label: "n8n Webhook Secret", group: "automation", secret: true, description: "MyOS 调用 n8n 时附加的签名密钥。" },

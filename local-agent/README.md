@@ -34,7 +34,7 @@ The local agent can safely add the MyOS MCP server to an allowlisted project fro
 - The operation only adds the `myos` MCP entry, creates a timestamped backup of an existing file, and uses environment-variable references instead of writing `MYOS_CLI_TOKEN` into the file.
 - It requires a preview followed by the explicit confirmation button in MyOS.
 
-Codex, Hermes, and OpenClaw remain template-only until their local configuration formats are added to the allowlisted writer.
+Codex, GitHub Copilot CLI, Hermes, and OpenClaw remain template-only until their local configuration formats are added to the allowlisted writer.
 
 Every endpoint requires:
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, Download, RefreshCw, Save, Trash2, Upload } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Download, ExternalLink, RefreshCw, Save, Trash2, Upload } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { postMyOSAction, publishMyOSData } from "@/lib/data/client-actions";
 import type { MyOSData } from "@/lib/data/models";
@@ -199,6 +200,14 @@ export default function SettingsPage() {
       <div className="page-header"><div><h1>系统设置</h1><p>在 MyOS 内配置数据库、AI、n8n、GitHub、Gmail、Notion 等连接。密钥只保存在服务端。</p></div></div>
       {message ? <p className="config-message">{message}</p> : null}
       {error ? <p className="form-error">{error}</p> : null}
+      <section className="panel settings-guide">
+        <div className="panel-header"><h2>AI 配置入口</h2></div>
+        <p className="row-subtitle">API Provider 在本页的“AI 配置”中保存；保存后到 AI 工作台选择模型。Codex CLI 和 GitHub Copilot CLI 属于本机 Agent，请在能力中心管理，不要把它们的本地登录凭据复制到网页。</p>
+        <div className="button-row">
+          <Link className="text-button" href="/app/ai">打开 AI 工作台 <ExternalLink size={14} aria-hidden /></Link>
+          <Link className="text-button" href="/app/capabilities">管理 CLI、MCP 与 Skill <ExternalLink size={14} aria-hidden /></Link>
+        </div>
+      </section>
       <div className="settings-layout">
         <div className="settings-main">
           {Object.entries(groupLabels).map(([group, label]) => (

@@ -132,6 +132,11 @@ export function getAIProviders(): AIProvider[] {
         })
       : new UnconfiguredProvider("openrouter", "OpenRouter", "OPENROUTER_API_KEY")
   );
+  providers.push(
+    process.env.DEEPSEEK_API_KEY
+      ? new ChatCompletionsProvider("deepseek", "DeepSeek", process.env.DEEPSEEK_API_KEY, "https://api.deepseek.com", "deepseek-v4-flash")
+      : new UnconfiguredProvider("deepseek", "DeepSeek", "DEEPSEEK_API_KEY")
+  );
   providers.push(process.env.OLLAMA_BASE_URL ? new OllamaProvider(process.env.OLLAMA_BASE_URL) : new UnconfiguredProvider("ollama", "Ollama", "OLLAMA_BASE_URL"));
 
   return providers;

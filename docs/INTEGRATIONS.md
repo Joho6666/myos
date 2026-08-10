@@ -8,11 +8,14 @@ Supported providers:
 
 - OpenAI via `OPENAI_API_KEY`
 - OpenRouter via `OPENROUTER_API_KEY`
+- DeepSeek via `DEEPSEEK_API_KEY` using the OpenAI-compatible `https://api.deepseek.com` endpoint
 - Ollama via `OLLAMA_BASE_URL` in local development or future local agent
 
 Unconfigured providers return explicit errors. The UI must not simulate successful AI output.
 
-The AI workbench provides a status refresh button and a direct settings shortcut. After configuring a provider in Settings, the owner can refresh the AI page and immediately use the configured provider without guessing whether the server picked up the change.
+The AI workbench provides a status refresh button and a direct settings shortcut. After configuring a provider in Settings, the owner can refresh the AI page and immediately use the configured provider without guessing whether the server picked up the change. DeepSeek defaults to `deepseek-v4-flash`, and the model field remains editable for future provider model changes.
+
+Codex CLI and GitHub Copilot CLI are local Agent targets, not API Providers. Their local OAuth or credential-store sessions stay on the machine. MyOS can register them on projects and record work items, progress, and reports; the current local-agent writer does not launch arbitrary CLI commands or write their private credentials.
 
 The AI workbench disables chat execution when the selected provider is not configured. `/api/ai/chat` also checks provider readiness before attempting a chat call and returns a `503` unconfigured response instead of a generic runtime failure.
 
@@ -76,7 +79,7 @@ The main dashboard (`/app`) also reads the same sanitized status endpoint and su
 `/api/integrations/status` performs server-side health checks for:
 
 - Supabase via a protected read against `profiles`, not only environment-variable presence
-- AI via provider model/tag endpoints for configured OpenAI, OpenRouter, or Ollama providers
+- AI via provider model/tag endpoints for configured OpenAI, OpenRouter, DeepSeek, or Ollama providers
 - n8n via its `/healthz` endpoint and configured webhook variables
 - GitHub via `GITHUB_TOKEN`
 - Notion via `NOTION_TOKEN`

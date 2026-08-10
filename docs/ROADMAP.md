@@ -14,7 +14,7 @@ Implement production CRUD for life areas, goals, tasks, habits, routines, daily 
 
 ## Phase 3
 
-Implement live AI Provider Adapter with OpenAI first, then OpenRouter and Ollama.
+Implement live AI Provider Adapter with OpenAI, OpenRouter, DeepSeek, and Ollama. Keep local CLI Agents such as Codex CLI and GitHub Copilot CLI behind the local-agent allowlist and explicit execution adapters.
 
 ## Phase 4
 

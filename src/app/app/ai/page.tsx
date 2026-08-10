@@ -92,7 +92,7 @@ export default function AIPage() {
             <p className="row-subtitle" style={{ whiteSpace: "normal" }}>{current?.status.message || "正在读取状态..."}</p>
             {!current?.status.ok ? (
               <div className="empty-state compact">
-                在系统设置里配置 OpenAI、OpenRouter 或 Ollama 后，回到这里点击“刷新状态”即可使用。
+                在系统设置里配置 OpenAI、OpenRouter、DeepSeek 或 Ollama 后，回到这里点击“刷新状态”即可使用。Codex CLI 和 GitHub Copilot CLI 请在能力中心作为本机 Agent 管理。
               </div>
             ) : null}
           </div>
