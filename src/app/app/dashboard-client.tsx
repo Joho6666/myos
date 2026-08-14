@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, CheckSquare, Inbox, Network, Plus, Sparkles } from "lucide-react";
+import { AlertTriangle, CalendarDays, CheckSquare, Inbox, Network, Plus, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Panel } from "@/components/dashboard/panel";
 import { agentRegistry } from "@/features/agents/registry";
@@ -14,6 +14,18 @@ type IntegrationStatus = {
   state: "connected" | "unconfigured" | "error";
 };
 
+type GoogleCalendarSnapshot = {
+  events?: Array<{ id: string; summary: string; htmlLink: string; start: { date?: string; dateTime?: string } }>;
+};
+
+type GoogleTasksSnapshot = {
+  tasks?: Array<{ id: string; title: string; status: "needsAction" | "completed"; due?: string }>;
+};
+
+type GoogleDriveSnapshot = {
+  files?: Array<{ id: string; name: string; modifiedTime?: string }>;
+};
+
 function projectProgress(projectId: string, manualProgress: number, workItems: AgentWorkItem[]) {
   const items = workItems.filter((item) => item.projectId === projectId);
   if (!items.length) return manualProgress;
@@ -24,6 +36,10 @@ export function DashboardClient() {
   const { data, toggleTask } = useMyOSData();
   const [integrations, setIntegrations] = useState<IntegrationStatus[]>([]);
   const [integrationError, setIntegrationError] = useState("");
+  const [googleCalendar, setGoogleCalendar] = useState<GoogleCalendarSnapshot | null>(null);
+  const [googleTasks, setGoogleTasks] = useState<GoogleTasksSnapshot | null>(null);
+  const [googleDrive, setGoogleDrive] = useState<GoogleDriveSnapshot | null>(null);
+  const [googleSyncError, setGoogleSyncError] = useState("");
   const todayFocus = getTodayFocus(data.tasks);
   const todayTasks = getTodayTasks(data.tasks);
   const unfinishedToday = todayTasks.filter((task) => !task.done);
@@ -52,7 +68,26 @@ export function DashboardClient() {
         if (alive) setIntegrationError(error instanceof Error ? error.message : "读取连接状态失败。");
       }
     }
+    async function loadGoogleSnapshot() {
+      const [calendarResponse, tasksResponse, driveResponse] = await Promise.all([
+        fetch("/api/integrations/google/calendar/summary", { cache: "no-store" }),
+        fetch("/api/integrations/google/tasks/summary", { cache: "no-store" }),
+        fetch("/api/integrations/google/drive/summary", { cache: "no-store" })
+      ]);
+      const [calendarBody, tasksBody, driveBody] = await Promise.all([
+        calendarResponse.json().catch(() => null),
+        tasksResponse.json().catch(() => null),
+        driveResponse.json().catch(() => null)
+      ]);
+      if (!alive) return;
+      const failures = [calendarBody, tasksBody, driveBody].filter((body) => body?.error && !String(body.error).includes("未配置"));
+      setGoogleCalendar(calendarResponse.ok ? calendarBody : null);
+      setGoogleTasks(tasksResponse.ok ? tasksBody : null);
+      setGoogleDrive(driveResponse.ok ? driveBody : null);
+      setGoogleSyncError(failures.length ? "部分 Google 数据暂时无法读取，请到连接看板查看原因。" : "");
+    }
     void loadIntegrationStatus();
+    void loadGoogleSnapshot();
     return () => { alive = false; };
   }, []);
 
@@ -137,6 +172,15 @@ export function DashboardClient() {
             <div className="system-summary">
               <div className="system-summary-icon"><Network size={17} aria-hidden /></div>
               <div><strong>{integrationHealth === null ? "正在检查连接" : `连接健康度 ${integrationHealth}%`}</strong><p>{integrationError ? <><AlertTriangle size={14} aria-hidden /> {integrationError}</> : integrations.length ? `${connectedIntegrations}/${integrations.length} 个外部服务已连接` : "尚未读取到外部服务状态"}</p></div>
+            </div>
+          </Panel>
+
+          <Panel title="手机端 Google 状态" action={<Link className="panel-link" href="/app/integrations">管理同步</Link>}>
+            {googleSyncError ? <p className="row-subtitle" style={{ whiteSpace: "normal", padding: "0 14px 12px" }}>{googleSyncError}</p> : null}
+            <div className="table-list">
+              <div className="row"><span><span className="row-title"><CalendarDays size={15} aria-hidden /> 日历</span><span className="row-subtitle">未来 7 天</span></span><strong>{googleCalendar ? `${googleCalendar.events?.length || 0} 项` : "未连接"}</strong></div>
+              <div className="row"><span><span className="row-title"><CheckSquare size={15} aria-hidden /> Tasks</span><span className="row-subtitle">未完成任务</span></span><strong>{googleTasks ? `${googleTasks.tasks?.filter((task) => task.status !== "completed").length || 0} 项` : "未连接"}</strong></div>
+              <div className="row"><span><span className="row-title">Drive</span><span className="row-subtitle">最近文件元数据</span></span><strong>{googleDrive ? `${googleDrive.files?.length || 0} 个` : "未连接"}</strong></div>
             </div>
           </Panel>
         </aside>

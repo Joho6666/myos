@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
+import { hasGoogleOAuthConfig, refreshGoogleToken } from "@/server/integrations/google";
+import { listGoogleCalendarEvents, listGoogleDriveFiles, listGoogleTaskLists } from "@/server/integrations/google-platforms";
 import { recordIntegrationSync } from "@/server/integrations/sync-log";
 
 export const runtime = "nodejs";
@@ -100,6 +102,54 @@ async function gmailStatus(): Promise<IntegrationStatus> {
   }
 }
 
+async function googleCalendarStatus(): Promise<IntegrationStatus> {
+  if (!hasGoogleOAuthConfig()) {
+    return { id: "google-calendar", name: "Google Calendar", category: "日程", state: "unconfigured", message: "等待配置 Google OAuth 凭据", detail: "需要 Calendar 访问范围，读取手机端日程并接收 MyOS 任务。" };
+  }
+
+  try {
+    const events = await withTimeout(async (signal) => {
+      const token = await refreshGoogleToken(signal);
+      return await listGoogleCalendarEvents(token, signal);
+    });
+    return { id: "google-calendar", name: "Google Calendar", category: "日程", state: "connected", message: "日历可访问", detail: `未来 7 天读取到 ${events.items?.length || 0} 个日程，可从 MyOS 写入任务。` };
+  } catch (error) {
+    return { id: "google-calendar", name: "Google Calendar", category: "日程", state: "error", message: error instanceof Error ? error.message : "Google Calendar 检测失败", detail: "如果 Gmail 已连接但这里异常，通常是 refresh token 没有 Calendar scope。" };
+  }
+}
+
+async function googleTasksStatus(): Promise<IntegrationStatus> {
+  if (!hasGoogleOAuthConfig()) {
+    return { id: "google-tasks", name: "Google Tasks", category: "任务", state: "unconfigured", message: "等待配置 Google OAuth 凭据", detail: "需要 Tasks 访问范围，让 MyOS 任务和手机端 Google Tasks 联动。" };
+  }
+
+  try {
+    const lists = await withTimeout(async (signal) => {
+      const token = await refreshGoogleToken(signal);
+      return await listGoogleTaskLists(token, signal);
+    });
+    return { id: "google-tasks", name: "Google Tasks", category: "任务", state: "connected", message: "任务清单可访问", detail: `发现 ${lists.items?.length || 0} 个任务清单，可导入并回写 MyOS 任务。` };
+  } catch (error) {
+    return { id: "google-tasks", name: "Google Tasks", category: "任务", state: "error", message: error instanceof Error ? error.message : "Google Tasks 检测失败", detail: "如果 Gmail 已连接但这里异常，通常是 refresh token 没有 Tasks scope。" };
+  }
+}
+
+async function googleDriveStatus(): Promise<IntegrationStatus> {
+  if (!hasGoogleOAuthConfig()) {
+    return { id: "google-drive", name: "Google Drive", category: "文件", state: "unconfigured", message: "等待配置 Google OAuth 凭据", detail: "需要 Drive 只读访问范围，把云端文件链接带入 MyOS 文件中心。" };
+  }
+
+  try {
+    const files = await withTimeout(async (signal) => {
+      const token = await refreshGoogleToken(signal);
+      return await listGoogleDriveFiles(token, signal);
+    });
+    return { id: "google-drive", name: "Google Drive", category: "文件", state: "connected", message: "云端文件可访问", detail: `最近读取到 ${files.files?.length || 0} 个文件元数据。` };
+  } catch (error) {
+    return { id: "google-drive", name: "Google Drive", category: "文件", state: "error", message: error instanceof Error ? error.message : "Google Drive 检测失败", detail: "如果 Gmail 已连接但这里异常，通常是 refresh token 没有 Drive scope。" };
+  }
+}
+
 async function supabaseStatus(): Promise<IntegrationStatus> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
@@ -180,7 +230,7 @@ export async function GET() {
     return NextResponse.json({ error: "需要先登录 MyOS。" }, { status: 401 });
   }
 
-  const integrations = await Promise.all([supabaseStatus(), n8nStatus(), aiStatus(), githubStatus(), gmailStatus(), notionStatus()]);
+  const integrations = await Promise.all([supabaseStatus(), n8nStatus(), aiStatus(), githubStatus(), gmailStatus(), googleCalendarStatus(), googleTasksStatus(), googleDriveStatus(), notionStatus()]);
   await Promise.allSettled(integrations.map((integration) => recordIntegrationSync(session, integration.id, integration.state === "connected" ? "success" : integration.state === "unconfigured" ? "unconfigured" : "failed", integration.message)));
   return NextResponse.json({ integrations });
 }

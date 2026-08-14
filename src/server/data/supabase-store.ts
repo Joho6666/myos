@@ -235,7 +235,7 @@ function mapFile(row: Row): FileRecord {
     project: text(row.category, "未关联"),
     size: text(row.display_size) || `${Number(row.size_bytes ?? 0)} B`,
     mimeType: text(row.mime_type),
-    sourceUrl: downloadable ? `/api/files/download/${text(row.id)}` : undefined,
+    sourceUrl: text(row.source_url) || (downloadable ? `/api/files/download/${text(row.id)}` : undefined),
     storagePath,
     updatedAt: dateLabel(row.updated_at)
   };
@@ -1682,7 +1682,8 @@ export async function applyMyOSActionToSupabase(session: MyOSSession, action: My
           size_bytes: Number.parseInt(action.payload.size || "0", 10) || 0,
           display_size: action.payload.size || "未知",
           storage_path: action.payload.storagePath || `manual/${randomUUID()}`,
-          category: action.payload.project || "未关联"
+          category: action.payload.project || "未关联",
+          source_url: action.payload.sourceUrl || null
         }),
         "登记文件"
       );

@@ -47,7 +47,7 @@ The validated API routes call the selected repository. Client components continu
 
 Supabase PostgreSQL backs the core modules when configured. Supabase Storage backs private file uploads and signed downloads in Supabase mode. Supabase Auth should still replace local demo auth.
 
-Google Calendar and Google Tasks are represented by adapter-ready tables and `docs/GOOGLE-INTEGRATION.md`; production OAuth is intentionally deferred.
+Google Calendar, Google Tasks, and Google Drive use server-side OAuth adapters documented in `docs/GOOGLE-INTEGRATION.md`. The browser only receives sanitized summaries and never receives Google tokens.
 
 ## Server Boundaries
 
