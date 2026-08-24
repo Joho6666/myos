@@ -3,7 +3,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const http = require("node:http");
-const { spawn } = require("node:child_process");
+const { spawn, spawnSync } = require("node:child_process");
 const paths = require("./paths");
 const bootstrap = require("./bootstrap");
 
@@ -54,7 +54,7 @@ function startLocalAgent() {
 }
 
 async function startWebServer() {
-  webPort = await bootstrap.findFreePort(3000);
+  webPort = await bootstrap.findFreePort(3010);
   const fileEnv = bootstrap.readEnvLocal();
 
   webProcess = spawnNode(paths.serverEntry, {
@@ -66,7 +66,7 @@ async function startWebServer() {
       // 桌面版可写数据目录 —— src/server/paths.ts 读这个变量
       MYOS_DATA_DIR: paths.userDataDir,
       PORT: String(webPort),
-      HOSTNAME: "127.0.0.1",
+      HOSTNAME: "0.0.0.0",
       NODE_ENV: "production",
       // 本地助手连接信息由主进程注入，用户无需手动配置 token
       LOCAL_AGENT_BASE_URL: `http://127.0.0.1:${agentInfo ? agentInfo.port : bootstrap.AGENT_PORT}`,
@@ -118,14 +118,30 @@ function waitForServer(port, timeoutMs = 90000) {
   });
 }
 
-function stopAll() {
-  for (const child of [webProcess, agentProcess]) {
-    if (!child || child.killed) continue;
+/**
+ * Windows 上 child.kill() 只终止直接子进程，Next standalone 派生的
+ * 工作进程会残留并占用端口，必须用 taskkill 连同进程树一起结束。
+ */
+function killProcessTree(child) {
+  if (!child || child.killed || !child.pid) return;
+  if (process.platform === "win32") {
     try {
-      child.kill();
+      spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore", windowsHide: true });
     } catch {
       // 进程可能已退出
     }
+    return;
+  }
+  try {
+    child.kill("SIGTERM");
+  } catch {
+    // 进程可能已退出
+  }
+}
+
+function stopAll() {
+  for (const child of [webProcess, agentProcess]) {
+    killProcessTree(child);
   }
   webProcess = null;
   agentProcess = null;

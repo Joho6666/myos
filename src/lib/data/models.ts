@@ -105,7 +105,7 @@ export type Task = {
   actualMinutes?: number;
   status?: "inbox" | "planned" | "in_progress" | "completed" | "cancelled" | "archived";
   todayFocus?: boolean;
-  recurrenceRule?: string;
+  recurrenceRule?: "daily" | "weekdays" | "weekly" | "monthly";
   reminderTime?: string;
   done: boolean;
 };

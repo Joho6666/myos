@@ -2,6 +2,7 @@ import { z } from "zod";
 
 const prioritySchema = z.enum(["high", "medium", "low"]);
 const privacyLevelSchema = z.enum(["normal", "sensitive", "vault"]);
+const recurrenceRuleSchema = z.enum(["daily", "weekdays", "weekly", "monthly"]);
 
 const optionalText = z.string().trim().optional();
 const requiredText = z.string().trim().min(1).max(200);
@@ -153,7 +154,9 @@ export const myOSActionSchema = z.discriminatedUnion("type", [
       goalId: optionalText,
       due: optionalText,
       plannedDate: optionalText,
-      todayFocus: z.boolean().optional()
+      todayFocus: z.boolean().optional(),
+      recurrenceRule: recurrenceRuleSchema.optional(),
+      reminderTime: optionalText
     })
   }),
   z.object({
@@ -167,7 +170,9 @@ export const myOSActionSchema = z.discriminatedUnion("type", [
       due: optionalText,
       plannedDate: optionalText,
       todayFocus: z.boolean().optional(),
-      status: z.enum(["inbox", "planned", "in_progress", "completed", "cancelled", "archived"]).optional()
+      status: z.enum(["inbox", "planned", "in_progress", "completed", "cancelled", "archived"]).optional(),
+      recurrenceRule: recurrenceRuleSchema.optional(),
+      reminderTime: optionalText
     })
   }),
   z.object({

@@ -30,3 +30,11 @@ python-agent/.venv
 __pycache__
 *.py[cod]
 .pytest_cache
+
+# Android & Logs
+*.log
+*.apk
+android/.gradle
+android/build
+android/app/build
+android/local.properties

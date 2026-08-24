@@ -6,6 +6,18 @@ import { postMyOSAction, publishMyOSData } from "@/lib/data/client-actions";
 import { useMyOSData } from "@/lib/data/store";
 import type { Priority, Task } from "@/lib/data/models";
 
+const recurrenceOptions: { value: NonNullable<Task["recurrenceRule"]> | ""; label: string }[] = [
+  { value: "", label: "不重复" },
+  { value: "daily", label: "每天" },
+  { value: "weekdays", label: "工作日" },
+  { value: "weekly", label: "每周" },
+  { value: "monthly", label: "每月" }
+];
+
+function recurrenceLabel(value?: string) {
+  return recurrenceOptions.find((option) => option.value === value)?.label ?? "不重复";
+}
+
 function toDateInput(value?: string) {
   if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
   const date = new Date();
@@ -20,8 +32,9 @@ export default function TasksPage() {
   const [goalId, setGoalId] = useState("");
   const [priority, setPriority] = useState<Priority>("medium");
   const [todayFocus, setTodayFocus] = useState(false);
+  const [recurrence, setRecurrence] = useState<NonNullable<Task["recurrenceRule"]> | "">("");
   const [editingId, setEditingId] = useState("");
-  const [draft, setDraft] = useState({ title: "", project: "", goalId: "", priority: "medium" as Priority, due: "今天", plannedDate: "today", todayFocus: false, status: "planned" as Task["status"] });
+  const [draft, setDraft] = useState({ title: "", project: "", goalId: "", priority: "medium" as Priority, due: "今天", plannedDate: "today", todayFocus: false, status: "planned" as Task["status"], recurrence: "" as NonNullable<Task["recurrenceRule"]> | "" });
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -37,7 +50,8 @@ export default function TasksPage() {
       due: task.due,
       plannedDate: toDateInput(task.plannedDate),
       todayFocus: Boolean(task.todayFocus),
-      status: task.status || "planned"
+      status: task.status || "planned",
+      recurrence: (task.recurrenceRule as NonNullable<Task["recurrenceRule"]>) || ""
     });
   }
 
@@ -50,7 +64,7 @@ export default function TasksPage() {
     try {
       const next = await postMyOSAction({
         type: "addTask",
-        payload: { title, priority, project: project || undefined, goalId: goalId || undefined, due: "今天", plannedDate: "today", todayFocus }
+        payload: { title, priority, project: project || undefined, goalId: goalId || undefined, due: "今天", plannedDate: "today", todayFocus, recurrenceRule: recurrence || undefined }
       });
       publishMyOSData(next);
       setTitle("");
@@ -79,7 +93,8 @@ export default function TasksPage() {
           due: draft.due || "今天",
           plannedDate: draft.plannedDate || undefined,
           todayFocus: draft.todayFocus,
-          status: draft.status
+          status: draft.status,
+          recurrenceRule: draft.recurrence || undefined
         }
       });
       publishMyOSData(next);
@@ -102,7 +117,8 @@ export default function TasksPage() {
         payload: { id: task.id }
       });
       publishMyOSData(next);
-      setMessage(task.done ? `${task.title} 已标记为未完成。` : `${task.title} 已完成。`);
+      const spawned = !task.done && task.recurrenceRule && next.tasks.some((item) => item.title === task.title && !item.done && item.id !== task.id);
+      setMessage(task.done ? `${task.title} 已标记为未完成。` : spawned ? `${task.title} 已完成，下一轮已生成。` : `${task.title} 已完成。`);
     } catch (toggleError) {
       setError(toggleError instanceof Error ? toggleError.message : "切换任务状态失败。");
     } finally {
@@ -148,11 +164,12 @@ export default function TasksPage() {
       </form>
       <div className="form-inline">
         <select value={priority} onChange={(event) => setPriority(event.target.value as Priority)}><option value="high">高优先级</option><option value="medium">中优先级</option><option value="low">低优先级</option></select>
+        <select aria-label="重复规则" value={recurrence} onChange={(event) => setRecurrence(event.target.value as NonNullable<Task["recurrenceRule"]> | "")}>{recurrenceOptions.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}</select>
         <label className="text-button"><input type="checkbox" checked={todayFocus} onChange={(event) => setTodayFocus(event.target.checked)} /> 标记今日重点</label>
       </div>
       <section className="panel">
         <table className="content-table">
-          <thead><tr><th>完成</th><th>任务</th><th>项目</th><th>目标</th><th>计划</th><th>重点</th><th>优先级</th><th>操作</th></tr></thead>
+          <thead><tr><th>完成</th><th>任务</th><th>项目</th><th>目标</th><th>计划</th><th>重复</th><th>重点</th><th>优先级</th><th>操作</th></tr></thead>
           <tbody>{data.tasks.map((task) => (
             <tr key={task.id}>
               <td><input type="checkbox" checked={task.done} disabled={busy === task.id} onChange={() => toggleTaskDone(task)} /></td>
@@ -167,6 +184,7 @@ export default function TasksPage() {
                       <input aria-label="截止提示" value={draft.due} onChange={(event) => setDraft((current) => ({ ...current, due: event.target.value }))} />
                     </div>
                   </td>
+                  <td><select aria-label="重复规则" value={draft.recurrence} onChange={(event) => setDraft((current) => ({ ...current, recurrence: event.target.value as NonNullable<Task["recurrenceRule"]> | "" }))}>{recurrenceOptions.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}</select></td>
                   <td><input type="checkbox" checked={draft.todayFocus} onChange={(event) => setDraft((current) => ({ ...current, todayFocus: event.target.checked }))} /></td>
                   <td><select value={draft.priority} onChange={(event) => setDraft((current) => ({ ...current, priority: event.target.value as Priority }))}><option value="high">high</option><option value="medium">medium</option><option value="low">low</option></select></td>
                   <td><span style={{ display: "inline-flex", gap: 8 }}><button className="text-button" type="button" disabled={busy === task.id} onClick={() => saveEdit(task)}>{busy === task.id ? "保存中" : "保存"}</button><button className="text-button" type="button" onClick={() => setEditingId("")}>取消</button></span></td>
@@ -177,6 +195,7 @@ export default function TasksPage() {
                   <td>{task.project || "生活任务"}</td>
                   <td>{data.goals.find((goal) => goal.id === task.goalId)?.title || "未关联"}</td>
                   <td>{task.plannedDate || task.due}</td>
+                  <td>{recurrenceLabel(task.recurrenceRule)}</td>
                   <td>{task.todayFocus ? "是" : "否"}</td>
                   <td>{task.priority}</td>
                   <td>

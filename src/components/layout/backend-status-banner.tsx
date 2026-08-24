@@ -10,7 +10,7 @@ export function BackendStatusBanner() {
   const checkBackend = useCallback(async () => {
     setChecking(true);
     try {
-      const response = await fetch("/api/myos/data?health=1", { cache: "no-store" });
+      const response = await fetch("/api/myos/data?health=1", { cache: "no-store", credentials: "include" });
       setAvailable(response.ok);
     } catch {
       setAvailable(false);
@@ -37,3 +37,4 @@ export function BackendStatusBanner() {
     </div>
   );
 }
+

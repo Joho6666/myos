@@ -1,6 +1,6 @@
 {
   "name": "myos",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "private": true,
   "description": "MyOS - 私人数字操作系统",
   "author": "MyOS",
@@ -12,10 +12,10 @@
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "supabase": ".\\tools\\supabase\\supabase.exe",
-    "supabase:start": ".\\tools\\supabase\\supabase.exe start",
-    "supabase:stop": ".\\tools\\supabase\\supabase.exe stop",
-    "supabase:reset": ".\\tools\\supabase\\supabase.exe db reset",
+    "supabase": "tools/supabase/supabase.exe",
+    "supabase:start": "tools/supabase/supabase.exe start",
+    "supabase:stop": "tools/supabase/supabase.exe stop",
+    "supabase:reset": "tools/supabase/supabase.exe db reset",
     "local-agent": "node local-agent/server.mjs",
     "agent:cli": "node tools/myos-agent-cli.mjs",
     "agent:mcp": "node tools/myos-agent-mcp.mjs",
@@ -23,11 +23,15 @@
     "python-agent:test": "python -m unittest discover -s python-agent/tests -p \"test_*.py\"",
     "desktop:icon": "node desktop/scripts/make-icon.mjs",
     "desktop:prepare": "node desktop/scripts/build-app.mjs",
-    "desktop:dev": "node desktop/scripts/build-app.mjs && electron desktop/electron/main.js",
+    "desktop:dev": "node desktop/scripts/make-icon.mjs && node desktop/scripts/build-app.mjs && electron desktop/electron/main.js",
     "desktop:start": "electron desktop/electron/main.js",
-    "desktop:build": "node desktop/scripts/make-icon.mjs && node desktop/scripts/build-app.mjs && electron-builder --win"
+    "desktop:build": "node desktop/scripts/make-icon.mjs && node desktop/scripts/build-app.mjs && electron-builder --win",
+    "android:sync": "cap sync android",
+    "android:open": "cap open android",
+    "android:build": "cap sync android && cd android && gradlew assembleDebug"
   },
   "dependencies": {
+    "@capacitor/core": "^8.5.0",
     "@hookform/resolvers": "^5.2.1",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.52.1",
@@ -41,6 +45,8 @@
     "zod": "^4.0.10"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
     "@eslint/eslintrc": "^3.3.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
@@ -48,6 +54,7 @@
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^4.7.0",
+    "astral-regex": "^2.0.0",
     "electron": "^43.2.0",
     "electron-builder": "^25.1.8",
     "eslint": "^9.31.0",

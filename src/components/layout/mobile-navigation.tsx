@@ -1,9 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, ChevronUp, LayoutGrid } from "lucide-react";
+import {
+  CalendarCheck,
+  CheckSquare,
+  ChevronDown,
+  ChevronUp,
+  Inbox,
+  LayoutGrid,
+  Plus,
+  X
+} from "lucide-react";
 import { usePathname } from "next/navigation";
-import { moreNavSections, primaryNavItems } from "./nav-items";
+import { useState } from "react";
+import { moreNavSections } from "./nav-items";
 
 function isActive(pathname: string, href: string) {
   return pathname === href || (href !== "/app" && pathname.startsWith(href));
@@ -11,31 +21,108 @@ function isActive(pathname: string, href: string) {
 
 export function MobileNavigation() {
   const pathname = usePathname();
-  const moreIsActive = moreNavSections.some((section) => section.items.some((item) => isActive(pathname, item.href)));
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  const moreIsActive = moreNavSections.some((section) =>
+    section.items.some((item) => isActive(pathname, item.href))
+  );
 
   return (
     <nav className="mobile-dock" aria-label="移动端主导航">
-      {primaryNavItems.map((item) => {
-        const Icon = item.icon;
-        return <Link className={isActive(pathname, item.href) ? "mobile-dock-link active" : "mobile-dock-link"} href={item.href} key={item.href}><Icon size={18} aria-hidden /><span>{item.label}</span></Link>;
-      })}
-      <details className="mobile-dock-more">
-        <summary className={moreIsActive ? "mobile-dock-link active" : "mobile-dock-link"}><LayoutGrid size={18} aria-hidden /><span>更多</span><ChevronUp size={12} aria-hidden /></summary>
-        <div className="mobile-dock-sheet">
-          <div className="mobile-dock-sheet-handle" />
-          {moreNavSections.map((section) => (
-            <details className="mobile-nav-group" key={section.label} open={section.items.some((item) => isActive(pathname, item.href))}>
-              <summary><span>{section.label}</span><ChevronDown size={15} aria-hidden /></summary>
-              <div>
-                {section.items.map((item) => {
-                  const Icon = item.icon;
-                  return <Link className={isActive(pathname, item.href) ? "active" : ""} href={item.href} key={item.href}><Icon size={16} aria-hidden />{item.label}</Link>;
-                })}
+      {/* 1. 今天 */}
+      <Link
+        className={isActive(pathname, "/app") ? "mobile-dock-link active" : "mobile-dock-link"}
+        href="/app"
+        onClick={() => setMoreOpen(false)}
+      >
+        <CalendarCheck size={19} aria-hidden />
+        <span>今天</span>
+      </Link>
+
+      {/* 2. 收件箱 */}
+      <Link
+        className={isActive(pathname, "/app/inbox") ? "mobile-dock-link active" : "mobile-dock-link"}
+        href="/app/inbox"
+        onClick={() => setMoreOpen(false)}
+      >
+        <Inbox size={19} aria-hidden />
+        <span>收件箱</span>
+      </Link>
+
+      {/* 3. 悬浮居中 Plus 按钮 */}
+      <Link
+        className="mobile-floating-plus-btn"
+        href="/app/inbox"
+        aria-label="快速记录灵感或待办"
+        title="快速记录"
+        onClick={() => setMoreOpen(false)}
+      >
+        <Plus size={24} strokeWidth={2.6} />
+      </Link>
+
+      {/* 4. 任务中心 */}
+      <Link
+        className={isActive(pathname, "/app/tasks") ? "mobile-dock-link active" : "mobile-dock-link"}
+        href="/app/tasks"
+        onClick={() => setMoreOpen(false)}
+      >
+        <CheckSquare size={19} aria-hidden />
+        <span>任务</span>
+      </Link>
+
+      {/* 5. 更多入口抽屉 */}
+      <div className="mobile-dock-more" style={{ position: "relative" }}>
+        <button
+          className={moreIsActive || moreOpen ? "mobile-dock-link active" : "mobile-dock-link"}
+          type="button"
+          onClick={() => setMoreOpen((prev) => !prev)}
+          style={{ background: "transparent", border: 0, width: "100%", cursor: "pointer" }}
+        >
+          <LayoutGrid size={19} aria-hidden />
+          <span>更多</span>
+          {moreOpen ? <ChevronDown size={11} aria-hidden /> : <ChevronUp size={11} aria-hidden />}
+        </button>
+
+        {moreOpen ? (
+          <div className="mobile-dock-sheet">
+            <div className="mobile-dock-sheet-handle" onClick={() => setMoreOpen(false)} />
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+              <span style={{ fontSize: 13, fontWeight: 700 }}>全部功能模块</span>
+              <button
+                type="button"
+                onClick={() => setMoreOpen(false)}
+                style={{ background: "transparent", border: 0, padding: 4, cursor: "pointer", color: "inherit" }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            {moreNavSections.map((section) => (
+              <div className="mobile-nav-group" key={section.label}>
+                <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.7, padding: "4px 0" }}>
+                  {section.label}
+                </div>
+                <div>
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        className={isActive(pathname, item.href) ? "active" : ""}
+                        href={item.href}
+                        key={item.href}
+                        onClick={() => setMoreOpen(false)}
+                      >
+                        <Icon size={16} aria-hidden />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-            </details>
-          ))}
-        </div>
-      </details>
+            ))}
+          </div>
+        ) : null}
+      </div>
     </nav>
   );
 }
+

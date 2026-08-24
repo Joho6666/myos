@@ -69,6 +69,7 @@ export function getGoogleAuthUrl(state: string) {
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }
 
+export const isGoogleConfigured = hasGoogleOAuthConfig;
 export function hasGoogleOAuthConfig() {
   return Boolean(
     process.env.GOOGLE_CLIENT_ID?.trim() &&

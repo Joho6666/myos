@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
-import { googleCalendarDateRange } from "@/server/integrations/google";
+import { googleCalendarDateRange, isGoogleConfigured } from "@/server/integrations/google";
 import { listGoogleCalendarEvents } from "@/server/integrations/google-platforms";
 import { googleErrorResponse, withGoogleAccessToken } from "@/server/integrations/google-route";
 
@@ -9,6 +9,9 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   if (!(await getSession())) return NextResponse.json({ error: "需要先登录 MyOS。" }, { status: 401 });
+  if (!isGoogleConfigured()) {
+    return NextResponse.json({ unconfigured: true, events: [] });
+  }
   try {
     const params = new URL(request.url).searchParams;
     const range = {

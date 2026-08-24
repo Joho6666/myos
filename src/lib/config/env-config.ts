@@ -19,6 +19,7 @@ export class ConfigValidationError extends Error {
 export const configFields: ConfigField[] = [
   { key: "OWNER_EMAIL", label: "拥有者邮箱", group: "owner", secret: false, description: "只允许这个邮箱登录 MyOS。", placeholder: "owner@example.com" },
   { key: "MYOS_SESSION_SECRET", label: "会话签名密钥", group: "owner", secret: true, description: "用于签名私人登录会话，建议使用至少 32 个字符的随机值。" },
+  { key: "MYOS_QUICK_API_TOKEN", label: "快捷 API / 小组件 Token", group: "owner", secret: true, description: "用于 iOS 快捷指令闪念胶囊、Scriptable 小组件等免登录直接写入收件箱或读取待办。" },
   { key: "NEXT_PUBLIC_APP_URL", label: "应用地址", group: "owner", secret: false, description: "OpenRouter、OAuth 和部署回调用到的站点地址。", placeholder: "http://localhost:3000" },
   { key: "NEXT_PUBLIC_SUPABASE_URL", label: "Supabase URL", group: "database", secret: false, description: "Supabase 项目 URL。" },
   { key: "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", label: "Supabase Publishable Key", group: "database", secret: false, description: "可公开的 Supabase anon/publishable key。" },
@@ -198,3 +199,4 @@ export async function updateRuntimeConfig(updates: Record<string, string>) {
   await writeFile(envLocalPath, serializeEnv(values), "utf8");
   return await readRuntimeConfig();
 }
+

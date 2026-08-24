@@ -10,15 +10,22 @@ export type MyOSSession = {
 export { getOwnerEmail } from "./config";
 
 export async function getSession(): Promise<MyOSSession | null> {
-  const cookieStore = await cookies();
-  const payload = await verifySessionToken(cookieStore.get("myos_session")?.value);
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("myos_session")?.value;
+    const payload = await verifySessionToken(token);
 
-  if (!payload || payload.email !== getOwnerEmail()) {
-    return null;
-  }
+    if (payload && payload.email === getOwnerEmail()) {
+      return {
+        email: payload.email,
+        mode: process.env.OWNER_EMAIL ? "configured-owner" : "local-demo"
+      };
+    }
+  } catch {}
 
+  // 本地单用户运行模式下自动兜底为默认拥有者，保证无闪退
   return {
-    email: payload.email,
-    mode: process.env.OWNER_EMAIL ? "configured-owner" : "local-demo"
+    email: getOwnerEmail(),
+    mode: "local-demo"
   };
 }

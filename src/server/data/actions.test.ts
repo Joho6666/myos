@@ -1,6 +1,82 @@
 import { describe, expect, it } from "vitest";
 import { seedData } from "@/lib/data/seed";
 import { applyMyOSAction, MyOSActionError } from "./actions";
+import { nextOccurrenceDate } from "./date-utils";
+
+describe("nextOccurrenceDate", () => {
+  it("advances daily, weekly, and monthly rules", () => {
+    expect(nextOccurrenceDate("daily", "2026-08-17")).toBe("2026-08-18");
+    expect(nextOccurrenceDate("weekly", "2026-08-17")).toBe("2026-08-24");
+    expect(nextOccurrenceDate("monthly", "2026-08-31")).toBe("2026-09-30");
+    expect(nextOccurrenceDate("monthly", "2026-01-31")).toBe("2026-02-28");
+  });
+
+  it("skips weekends for weekday rules", () => {
+    // 2026-08-21 是周五，下一轮应跳过周末到周一
+    expect(nextOccurrenceDate("weekdays", "2026-08-21")).toBe("2026-08-24");
+    expect(nextOccurrenceDate("weekdays", "2026-08-22")).toBe("2026-08-24");
+  });
+
+  it("resolves the today alias and rejects invalid input", () => {
+    expect(nextOccurrenceDate("daily", "today", new Date("2026-08-17T02:00:00Z"))).toBe("2026-08-18");
+    expect(nextOccurrenceDate("hourly", "2026-08-17")).toBeNull();
+    expect(nextOccurrenceDate("daily", "not-a-date")).toBeNull();
+  });
+});
+
+describe("applyMyOSAction recurring tasks", () => {
+  it("spawns the next occurrence when completing a recurring task", () => {
+    const created = applyMyOSAction(seedData, {
+      type: "addTask",
+      payload: {
+        title: "晚间复盘",
+        priority: "medium",
+        plannedDate: "today",
+        todayFocus: false,
+        recurrenceRule: "daily"
+      }
+    });
+    const task = created.tasks[0]!;
+    expect(task.recurrenceRule).toBe("daily");
+
+    const completed = applyMyOSAction(created, { type: "toggleTask", payload: { id: task.id } });
+
+    const original = completed.tasks.find((item) => item.id === task.id)!;
+    expect(original.done).toBe(true);
+    expect(original.status).toBe("completed");
+    expect(original.recurrenceRule).toBeUndefined();
+
+    const nextTask = completed.tasks.find((item) => item.id !== task.id && item.title === "晚间复盘")!;
+    expect(nextTask.done).toBe(false);
+    expect(nextTask.status).toBe("planned");
+    expect(nextTask.recurrenceRule).toBe("daily");
+    expect(nextTask.plannedDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(completed.activities[0]?.action).toBe("完成重复任务");
+  });
+
+  it("does not respawn a recurring task when un-completing it", () => {
+    const created = applyMyOSAction(seedData, {
+      type: "addTask",
+      payload: { title: "周报", priority: "low", plannedDate: "2026-08-17", recurrenceRule: "weekly" }
+    });
+    const task = created.tasks[0]!;
+
+    const completed = applyMyOSAction(created, { type: "toggleTask", payload: { id: task.id } });
+    const reopened = applyMyOSAction(completed, { type: "toggleTask", payload: { id: task.id } });
+
+    const original = reopened.tasks.find((item) => item.id === task.id)!;
+    expect(original.done).toBe(false);
+    expect(reopened.tasks.filter((item) => item.title === "周报")).toHaveLength(2);
+  });
+
+  it("keeps plain toggling for tasks without a recurrence rule", () => {
+    const task = seedData.tasks[0]!;
+    const toggled = applyMyOSAction(seedData, { type: "toggleTask", payload: { id: task.id } });
+
+    expect(toggled.tasks).toHaveLength(seedData.tasks.length);
+    expect(toggled.tasks.find((item) => item.id === task.id)?.done).toBe(true);
+  });
+});
 
 describe("applyMyOSAction", () => {
   it("creates a project and records activity", () => {
