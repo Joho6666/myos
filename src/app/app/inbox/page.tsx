@@ -5,13 +5,11 @@ import { useState } from "react";
 import { postMyOSAction, publishMyOSData } from "@/lib/data/client-actions";
 import { useMyOSData } from "@/lib/data/store";
 import type { InboxItem } from "@/lib/data/models";
-import Link from "next/link";
+import { useCreationCenter } from "@/features/creation/creation-context";
 
 export default function InboxPage() {
   const { data } = useMyOSData();
-  const [title, setTitle] = useState("");
-  const [type, setType] = useState<"text" | "file" | "link" | "idea">("text");
-  const [category, setCategory] = useState("待分类");
+  const { openCreation } = useCreationCenter();
   const [editingId, setEditingId] = useState("");
   const [draft, setDraft] = useState({ title: "", type: "text" as InboxItem["type"], category: "", status: "pending" as InboxItem["status"] });
   const [busy, setBusy] = useState("");
@@ -21,27 +19,6 @@ export default function InboxPage() {
   function startEdit(item: InboxItem) {
     setEditingId(item.id);
     setDraft({ title: item.title, type: item.type, category: item.category, status: item.status });
-  }
-
-  async function createInboxItem(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!title.trim()) return;
-    setBusy("create");
-    setMessage("");
-    setError("");
-    try {
-      const next = await postMyOSAction({
-        type: "addInbox",
-        payload: { title, type, category }
-      });
-      publishMyOSData(next);
-      setTitle("");
-      setMessage(`${title} 已添加到收件箱。`);
-    } catch (createError) {
-      setError(createError instanceof Error ? createError.message : "添加收件箱条目失败。");
-    } finally {
-      setBusy("");
-    }
   }
 
   async function saveEdit(id: string) {
@@ -90,21 +67,10 @@ export default function InboxPage() {
           <h1>万能收件箱</h1>
           <p>先把文本、链接、文件和灵感收进来，再转成项目、任务、知识或提示词。</p>
         </div>
-        <Link className="primary-button" href="/app/inbox/new"><Plus size={16} aria-hidden />沉浸记录</Link>
+        <button className="primary-button" type="button" onClick={(event) => openCreation({ type: "inbox", trigger: event.currentTarget })}><Plus size={16} aria-hidden />沉浸记录</button>
       </div>
       {message ? <p className="config-message">{message}</p> : null}
       {error ? <p className="form-error">{error}</p> : null}
-      <form className="form-inline" onSubmit={createInboxItem}>
-        <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="条目标题" required />
-        <select value={type} onChange={(event) => setType(event.target.value as "text" | "file" | "link" | "idea")}>
-          <option value="text">文本</option>
-          <option value="file">文件</option>
-          <option value="link">链接</option>
-          <option value="idea">灵感</option>
-        </select>
-        <input value={category} onChange={(event) => setCategory(event.target.value)} placeholder="分类" />
-        <button className="primary-button" type="submit" disabled={busy === "create"}><Plus size={16} aria-hidden />{busy === "create" ? "添加中" : "添加"}</button>
-      </form>
       <section className="panel">
         <table className="content-table">
           <thead><tr><th>标题</th><th>类型</th><th>分类</th><th>状态</th><th>创建</th><th>操作</th></tr></thead>

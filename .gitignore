@@ -19,6 +19,7 @@ local-agent/agent.config.json
 
 # 桌面版打包产物
 dist
+dist-release-*/
 desktop/build
 desktop/logs
 .env.local.buildbak

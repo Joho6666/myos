@@ -1,2 +1,2 @@
-import { CreationPage } from "@/components/workspace/creation-pages";
-export default function NewInboxPage() { return <CreationPage kind="inbox" />; }
+import { redirect } from "next/navigation";
+export default function NewInboxPage() { redirect("/app/inbox?create=inbox"); }

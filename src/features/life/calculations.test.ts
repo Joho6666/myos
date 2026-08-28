@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getTodayTasks } from "./calculations";
+import { getNextTasks, getTodayTasks } from "./calculations";
 import type { Task } from "@/lib/data/models";
 
 const task = (overrides: Partial<Task>): Task => ({
@@ -23,5 +23,17 @@ describe("life calculations", () => {
 
     expect(getTodayTasks([task({ plannedDate: tomorrowKey })])).toHaveLength(0);
     expect(getTodayTasks([task({ plannedDate: "today" })])).toHaveLength(1);
+  });
+
+  it("prioritizes actionable tasks and never repeats today's focus", () => {
+    const result = getNextTasks([
+      task({ id: "focus", todayFocus: true, priority: "high" }),
+      task({ id: "later", plannedDate: "2099-12-31", priority: "high" }),
+      task({ id: "today-low", plannedDate: "today", priority: "low" }),
+      task({ id: "today-high", plannedDate: "today", priority: "high" }),
+      task({ id: "done", done: true, priority: "high" })
+    ]);
+
+    expect(result.map((item) => item.id)).toEqual(["today-high", "today-low", "later"]);
   });
 });

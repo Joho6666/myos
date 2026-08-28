@@ -42,6 +42,30 @@ export function getTodayFocus(tasks: Task[]) {
     .slice(0, 3);
 }
 
+export function getNextTasks(tasks: Task[]) {
+  const today = new Intl.DateTimeFormat("en-CA").format(new Date());
+  const tomorrowDate = new Date();
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  const tomorrow = new Intl.DateTimeFormat("en-CA").format(tomorrowDate);
+  const priorityRank = { high: 0, medium: 1, low: 2 } as const;
+
+  function dateRank(task: Task) {
+    if (task.plannedDate) {
+      if (task.plannedDate === "today" || task.plannedDate === today) return 0;
+      if (task.plannedDate === "tomorrow" || task.plannedDate === tomorrow) return 1;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(task.plannedDate)) return 2;
+    }
+    if (task.due === "今天" || task.due === "今晚" || task.due.includes(":")) return 0;
+    if (task.due === "明天") return 1;
+    return 3;
+  }
+
+  return tasks
+    .filter((task) => !task.done && !task.todayFocus && !["cancelled", "archived", "completed"].includes(task.status || "planned"))
+    .sort((left, right) => dateRank(left) - dateRank(right) || priorityRank[left.priority] - priorityRank[right.priority])
+    .slice(0, 5);
+}
+
 export function habitCompletionRate(habits: Habit[], logs: HabitLog[]) {
   if (!habits.length) {
     return 0;

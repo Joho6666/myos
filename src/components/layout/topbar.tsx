@@ -8,8 +8,10 @@ import { logoutAction } from "@/app/login/actions";
 import { DesktopFocusToggle } from "./desktop-focus-toggle";
 import { navGroups } from "./nav-items";
 import { normalizeSkinId, themeSkins } from "@/lib/theme/skins";
+import { useCreationCenter } from "@/features/creation/creation-context";
 
 export function Topbar({ email }: { email: string }) {
+  const { openCreation } = useCreationCenter();
   const [dark, setDark] = useState(false);
   const [skin, setSkin] = useState("ocean");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -100,10 +102,10 @@ export function Topbar({ email }: { email: string }) {
       <CommandPalette />
 
       <div className="top-actions">
-        <Link className="text-button" href="/app/projects">
+        <button className="text-button" type="button" onClick={(event) => openCreation({ trigger: event.currentTarget })}>
           <Plus size={16} aria-hidden />
           新建
-        </Link>
+        </button>
 
         <div className="theme-picker" style={{ position: "relative" }}>
           <button

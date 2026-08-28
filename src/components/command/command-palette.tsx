@@ -1,22 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Check, Plus, Search, Sparkles } from "lucide-react";
+import { ArrowRight, Plus, Search, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { actionRegistry } from "@/features/actions/registry";
-import { parseQuickCaptureIntent } from "@/features/command/quick-capture";
 import { useMyOSData } from "@/lib/data/store";
 import { searchMyOS } from "@/features/search/search";
+import { parseCreationIntent } from "@/features/creation/parse-creation-intent";
+import { useCreationCenter } from "@/features/creation/creation-context";
 
 export function CommandPalette() {
-  const { data, saving, error, addProject, addTask, addInbox } = useMyOSData();
+  const { data } = useMyOSData();
+  const { openCreation } = useCreationCenter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [feedback, setFeedback] = useState("");
-  const [captureSaving, setCaptureSaving] = useState(false);
   const results = searchMyOS(data, query);
   const normalizedQuery = query.trim().toLowerCase();
-  const captureIntent = parseQuickCaptureIntent(query);
+  const captureIntent = parseCreationIntent(query, data.projects);
   const quickActions = actionRegistry
     .filter((action) => action.enabled)
     .filter((action) =>
@@ -26,29 +26,7 @@ export function CommandPalette() {
     .slice(0, normalizedQuery ? 8 : 6);
   const recentResults = searchMyOS(data, "").slice(0, 5);
 
-  async function runQuickCapture() {
-    if (!captureIntent) return;
-
-    setCaptureSaving(true);
-    try {
-      let saved = false;
-      if (captureIntent.kind === "project") {
-        saved = await addProject(captureIntent.payload);
-      } else if (captureIntent.kind === "task") {
-        if (!captureIntent.payload.title) return;
-        saved = await addTask(captureIntent.payload);
-      } else {
-        saved = await addInbox(captureIntent.payload);
-      }
-
-      if (!saved) return;
-      setFeedback("已保存");
-      setQuery("");
-      window.setTimeout(() => setFeedback(""), 1300);
-    } finally {
-      setCaptureSaving(false);
-    }
-  }
+  function openFromCommand() { setOpen(false); openCreation({ type: captureIntent?.type || undefined, text: query }); }
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -84,27 +62,26 @@ export function CommandPalette() {
               {captureIntent ? (
                 <div className="command-section">
                   <div className="command-section-title">快速捕获</div>
-                  <button className="command-result command-action command-button" disabled={saving || captureSaving} type="button" onClick={runQuickCapture}>
+                  <button className="command-result command-action command-button" type="button" onClick={openFromCommand}>
                     <span>
-                      <strong>{captureSaving ? "保存中..." : captureIntent.label}</strong>
+                      <strong>{captureIntent.type ? `创建${captureIntent.type === "project" ? "项目" : captureIntent.type === "task" ? "任务" : "想法"}：${captureIntent.title}` : "打开创建中心确认"}</strong>
                       <div className="row-subtitle">
-                        {captureIntent.kind === "project" ? "项目中心" : captureIntent.kind === "task" ? "任务" : "万能收件箱"} / 直接保存到后端
+                        先确认识别结果，再写入 MyOS
                       </div>
                     </span>
-                    {feedback ? <Check size={15} aria-hidden /> : <Plus size={15} aria-hidden />}
+                    <Plus size={15} aria-hidden />
                   </button>
-                  {error ? <div className="form-error" role="alert">{error}</div> : null}
                 </div>
               ) : null}
               <div className="command-section">
                 <div className="command-section-title">快速动作</div>
                 {quickActions.length ? quickActions.map((action) => (
-                  <Link className="command-result command-action" href={action.href || "/app"} key={action.id} onClick={() => setOpen(false)}>
-                    <span>
-                      <strong>{action.label}</strong>
-                      <div className="row-subtitle">{action.group} / {action.description}</div>
-                    </span>
-                    <ArrowRight size={15} aria-hidden />
+                  action.type === "create" && ["create-project", "create-task", "capture-inbox"].includes(action.id) ? (
+                    <button className="command-result command-action command-button" type="button" key={action.id} onClick={() => { setOpen(false); openCreation({ type: action.id === "create-project" ? "project" : action.id === "create-task" ? "task" : "inbox" }); }}>
+                      <span><strong>{action.label}</strong><div className="row-subtitle">{action.group} / {action.description}</div></span><Plus size={15} aria-hidden />
+                    </button>
+                  ) : <Link className="command-result command-action" href={action.href || "/app"} key={action.id} onClick={() => setOpen(false)}>
+                    <span><strong>{action.label}</strong><div className="row-subtitle">{action.group} / {action.description}</div></span><ArrowRight size={15} aria-hidden />
                   </Link>
                 )) : <div className="empty-state compact">没有匹配动作。</div>}
               </div>

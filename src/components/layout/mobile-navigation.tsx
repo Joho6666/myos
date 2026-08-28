@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   CalendarCheck,
+  Bot,
   CheckSquare,
   ChevronDown,
   ChevronUp,
@@ -14,12 +15,14 @@ import {
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { moreNavSections } from "./nav-items";
+import { useCreationCenter } from "@/features/creation/creation-context";
 
 function isActive(pathname: string, href: string) {
   return pathname === href || (href !== "/app" && pathname.startsWith(href));
 }
 
 export function MobileNavigation() {
+  const { openCreation } = useCreationCenter();
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -39,28 +42,7 @@ export function MobileNavigation() {
         <span>今天</span>
       </Link>
 
-      {/* 2. 收件箱 */}
-      <Link
-        className={isActive(pathname, "/app/inbox") ? "mobile-dock-link active" : "mobile-dock-link"}
-        href="/app/inbox"
-        onClick={() => setMoreOpen(false)}
-      >
-        <Inbox size={19} aria-hidden />
-        <span>收件箱</span>
-      </Link>
-
-      {/* 3. 悬浮居中 Plus 按钮 */}
-      <Link
-        className="mobile-floating-plus-btn"
-        href="/app/inbox"
-        aria-label="快速记录灵感或待办"
-        title="快速记录"
-        onClick={() => setMoreOpen(false)}
-      >
-        <Plus size={24} strokeWidth={2.6} />
-      </Link>
-
-      {/* 4. 任务中心 */}
+      {/* 2. 任务 */}
       <Link
         className={isActive(pathname, "/app/tasks") ? "mobile-dock-link active" : "mobile-dock-link"}
         href="/app/tasks"
@@ -70,7 +52,38 @@ export function MobileNavigation() {
         <span>任务</span>
       </Link>
 
-      {/* 5. 更多入口抽屉 */}
+      {/* 3. 悬浮居中 Plus 按钮 */}
+      <button
+        className="mobile-floating-plus-btn"
+        type="button"
+        aria-label="打开创建中心"
+        title="新建"
+        onClick={(event) => { setMoreOpen(false); openCreation({ trigger: event.currentTarget }); }}
+      >
+        <Plus size={24} strokeWidth={2.6} />
+      </button>
+
+      {/* 4. 收件箱 */}
+      <Link
+        className={isActive(pathname, "/app/inbox") ? "mobile-dock-link active" : "mobile-dock-link"}
+        href="/app/inbox"
+        onClick={() => setMoreOpen(false)}
+      >
+        <Inbox size={19} aria-hidden />
+        <span>收件箱</span>
+      </Link>
+
+      {/* 5. AI */}
+      <Link
+        className={isActive(pathname, "/app/ai") ? "mobile-dock-link active" : "mobile-dock-link"}
+        href="/app/ai"
+        onClick={() => setMoreOpen(false)}
+      >
+        <Bot size={19} aria-hidden />
+        <span>AI</span>
+      </Link>
+
+      {/* 6. 更多入口抽屉 */}
       <div className="mobile-dock-more" style={{ position: "relative" }}>
         <button
           className={moreIsActive || moreOpen ? "mobile-dock-link active" : "mobile-dock-link"}

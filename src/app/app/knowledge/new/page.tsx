@@ -1,2 +1,2 @@
-import { CreationPage } from "@/components/workspace/creation-pages";
-export default function NewKnowledgePage() { return <CreationPage kind="note" />; }
+import { redirect } from "next/navigation";
+export default function NewKnowledgePage() { redirect("/app/knowledge"); }

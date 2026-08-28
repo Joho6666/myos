@@ -9,5 +9,5 @@ export default async function PrivateLayout({ children }: { children: React.Reac
     mode: "local-demo" as const
   };
 
-  return <AppLayout email={session.email}>{children}</AppLayout>;
+  return <AppLayout email={session.email} timeZone={process.env.MYOS_TIME_ZONE?.trim() || "Asia/Shanghai"}>{children}</AppLayout>;
 }

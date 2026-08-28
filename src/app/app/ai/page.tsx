@@ -20,6 +20,7 @@ export default function AIPage() {
   const [output, setOutput] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [arrivedFromDashboard, setArrivedFromDashboard] = useState(false);
 
   async function refreshProviders() {
     setError("");
@@ -40,6 +41,14 @@ export default function AIPage() {
 
   useEffect(() => {
     void refreshProviders();
+  }, []);
+
+  useEffect(() => {
+    const prompt = new URLSearchParams(window.location.search).get("prompt")?.trim();
+    if (!prompt) return;
+    setMessage(prompt);
+    setArrivedFromDashboard(true);
+    window.history.replaceState({}, "", "/app/ai");
   }, []);
 
   const current = providers.find((item) => item.id === provider);
@@ -101,6 +110,7 @@ export default function AIPage() {
           <div className="panel-header"><h2><Bot size={16} aria-hidden /> 对话</h2></div>
           <div className="tool-card-body">
             <textarea className="search-input" value={message} onChange={(event) => setMessage(event.target.value)} rows={7} placeholder="输入你要处理的问题、需求或文档摘要..." />
+            {arrivedFromDashboard ? <p className="config-message">已带入首页的问题，请确认后发送。</p> : null}
             <button className="primary-button" type="button" disabled={loading || !message.trim() || !current?.status.ok} onClick={runChat}><Send size={16} aria-hidden />{loading ? "生成中" : current?.status.ok ? "发送" : "先配置 AI"}</button>
             {error ? <p className="form-error">{error}</p> : null}
             <pre className="tool-output">{output || "AI 输出会显示在这里。未配置密钥时会显示真实错误，不模拟成功。"}</pre>

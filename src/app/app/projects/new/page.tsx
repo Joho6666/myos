@@ -1,2 +1,2 @@
-import { CreationPage } from "@/components/workspace/creation-pages";
-export default function NewProjectPage() { return <CreationPage kind="project" />; }
+import { redirect } from "next/navigation";
+export default function NewProjectPage() { redirect("/app/projects?create=project"); }
