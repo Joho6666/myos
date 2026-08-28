@@ -4,6 +4,8 @@ import { z } from "zod";
 import { getOwnerEmail } from "@/lib/auth/session";
 import { createSessionToken, SESSION_COOKIE_NAME, SESSION_MAX_AGE } from "@/lib/auth/session-token";
 
+export const runtime = "edge";
+
 const loginSchema = z.object({ email: z.string().email() });
 
 export async function POST(request: Request) {
