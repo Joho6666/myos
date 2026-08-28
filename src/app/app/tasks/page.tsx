@@ -5,6 +5,7 @@ import { useState } from "react";
 import { postMyOSAction, publishMyOSData } from "@/lib/data/client-actions";
 import { useMyOSData } from "@/lib/data/store";
 import type { Priority, Task } from "@/lib/data/models";
+import Link from "next/link";
 
 const recurrenceOptions: { value: NonNullable<Task["recurrenceRule"]> | ""; label: string }[] = [
   { value: "", label: "不重复" },
@@ -152,6 +153,7 @@ export default function TasksPage() {
           <h1>任务</h1>
           <p>任务可以关联项目、直接关联目标，也可以作为普通生活任务。今日重点建议最多突出 3 项。</p>
         </div>
+        <Link className="primary-button" href="/app/tasks/new"><Plus size={16} aria-hidden />专注新建</Link>
       </div>
       {message ? <p className="config-message">{message}</p> : null}
       {error ? <p className="form-error">{error}</p> : null}

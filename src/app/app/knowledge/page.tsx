@@ -5,6 +5,7 @@ import { useState } from "react";
 import { postMyOSAction, publishMyOSData } from "@/lib/data/client-actions";
 import { useMyOSData } from "@/lib/data/store";
 import type { Note } from "@/lib/data/models";
+import Link from "next/link";
 
 export default function KnowledgePage() {
   const { data } = useMyOSData();
@@ -108,6 +109,7 @@ export default function KnowledgePage() {
           <h1>知识库</h1>
           <p>保存教程、开发经验、故障记录、工程规则和项目复盘。</p>
         </div>
+        <Link className="primary-button" href="/app/knowledge/new"><Plus size={16} aria-hidden />开始书写</Link>
       </div>
       {message ? <p className="config-message">{message}</p> : null}
       {error ? <p className="form-error">{error}</p> : null}

@@ -6,6 +6,7 @@ import { ProjectQuickCreate } from "@/features/projects/project-quick-create";
 import { postMyOSAction, publishMyOSData } from "@/lib/data/client-actions";
 import type { Project } from "@/lib/data/models";
 import { useMyOSData } from "@/lib/data/store";
+import Link from "next/link";
 
 export default function ProjectsPage() {
   const { data } = useMyOSData();
@@ -70,6 +71,7 @@ export default function ProjectsPage() {
           <h1>项目中心</h1>
           <p>像收件箱一样快速创建项目，之后再补充路径、任务和资料。</p>
         </div>
+        <Link className="primary-button" href="/app/projects/new">+ 开始项目</Link>
       </div>
       {message ? <p className="config-message">{message}</p> : null}
       {error ? <p className="form-error">{error}</p> : null}

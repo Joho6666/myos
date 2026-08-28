@@ -5,6 +5,7 @@ import { useState } from "react";
 import { postMyOSAction, publishMyOSData } from "@/lib/data/client-actions";
 import { useMyOSData } from "@/lib/data/store";
 import type { InboxItem } from "@/lib/data/models";
+import Link from "next/link";
 
 export default function InboxPage() {
   const { data } = useMyOSData();
@@ -89,6 +90,7 @@ export default function InboxPage() {
           <h1>万能收件箱</h1>
           <p>先把文本、链接、文件和灵感收进来，再转成项目、任务、知识或提示词。</p>
         </div>
+        <Link className="primary-button" href="/app/inbox/new"><Plus size={16} aria-hidden />沉浸记录</Link>
       </div>
       {message ? <p className="config-message">{message}</p> : null}
       {error ? <p className="form-error">{error}</p> : null}
