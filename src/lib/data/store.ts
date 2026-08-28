@@ -12,7 +12,7 @@ type ActionPayload<TType extends ActionType> = Extract<MyOSAction, { type: TType
   : undefined;
 
 async function fetchMyOSData() {
-  const response = await fetch("/api/myos/data", { cache: "no-store" });
+  const response = await fetch("/api/myos/data", { cache: "no-store", credentials: "include" });
   const body = await response.json().catch(() => null) as MyOSData | { error?: string } | null;
 
   if (!response.ok) {
@@ -138,10 +138,10 @@ export function useMyOSData() {
       toggleTask(id: string) {
         return mutate("toggleTask", { id });
       },
-      addTask(input: Pick<Task, "title" | "priority" | "project" | "goalId" | "due" | "plannedDate" | "todayFocus">) {
+      addTask(input: Pick<Task, "title" | "priority" | "project" | "goalId" | "due" | "plannedDate" | "todayFocus"> & Partial<Pick<Task, "recurrenceRule" | "reminderTime">>) {
         return mutate("addTask", input);
       },
-      updateTask(input: Pick<Task, "id" | "title" | "priority" | "project" | "goalId" | "due" | "plannedDate" | "todayFocus" | "status">) {
+      updateTask(input: Pick<Task, "id" | "title" | "priority" | "project" | "goalId" | "due" | "plannedDate" | "todayFocus" | "status"> & Partial<Pick<Task, "recurrenceRule" | "reminderTime">>) {
         return mutate("updateTask", input);
       },
       deleteTask(id: string) {
@@ -217,3 +217,4 @@ export function useMyOSData() {
     [data, ready, saving, error]
   );
 }
+

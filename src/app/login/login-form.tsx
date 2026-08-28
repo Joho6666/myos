@@ -1,16 +1,38 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState } from "react";
 import { ArrowRight, LockKeyhole } from "lucide-react";
-import { loginAction, type LoginState } from "./actions";
-
-const initialState: LoginState = {};
 
 export function LoginForm({ ownerEmail }: { ownerEmail: string }) {
-  const [state, formAction, pending] = useActionState(loginAction, initialState);
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPending(true);
+    setError("");
+    const formData = new FormData(event.currentTarget);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: formData.get("email") })
+      });
+      const result = (await response.json()) as { error?: string; redirect?: string };
+      if (!response.ok) {
+        setError(result.error || "无法建立登录会话。");
+        return;
+      }
+      window.location.assign(result.redirect || "/app");
+    } catch {
+      setError("网络连接失败，请稍后重试。");
+    } finally {
+      setPending(false);
+    }
+  }
 
   return (
-    <form action={formAction} className="login-panel">
+    <form onSubmit={handleSubmit} className="login-panel">
       <div className="login-mark">
         <LockKeyhole size={20} aria-hidden />
       </div>
@@ -30,7 +52,7 @@ export function LoginForm({ ownerEmail }: { ownerEmail: string }) {
           required
         />
       </label>
-      {state.error ? <p className="form-error">{state.error}</p> : null}
+      {error ? <p className="form-error">{error}</p> : null}
       <button type="submit" disabled={pending}>
         {pending ? "正在验证" : "进入工作台"}
         <ArrowRight size={16} aria-hidden />

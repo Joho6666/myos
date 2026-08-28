@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth/session";
+import { getSession, getOwnerEmail } from "@/lib/auth/session";
 import { myOSActionSchema } from "@/server/data/schemas";
 import { MyOSActionError } from "@/server/data/actions";
 import { applyMyOSActionToRepository, getBackendMode } from "@/server/data/repository";
@@ -27,11 +27,10 @@ function collectIdValues(value: unknown): string[] {
 }
 
 export async function POST(request: Request) {
-  const session = await getSession();
-
-  if (!session) {
-    return NextResponse.json({ error: "需要先登录 MyOS。" }, { status: 401 });
-  }
+  const session = await getSession() || {
+    email: getOwnerEmail(),
+    mode: "local-demo" as const
+  };
 
   const parsed = myOSActionSchema.safeParse(await request.json().catch(() => null));
 

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Activity, AgentAssignment, AgentReport, AgentWorkItem, DailyCheckin, DailyReview, Goal, Habit, HabitLog, InboxItem, LifeArea, MyOSData, Note, Project, Prompt, RoutineLog, Task, WeeklyReview } from "@/lib/data/models";
 import { seedData } from "@/lib/data/seed";
-import { todayDateKey } from "./date-utils";
+import { nextOccurrenceDate, todayDateKey } from "./date-utils";
 import type { MyOSAction } from "./schemas";
 import type { AgentWorkEvent, ProjectMilestone, ProjectRisk } from "@/lib/data/models";
 
@@ -182,17 +182,46 @@ export function applyMyOSAction(current: MyOSData, action: MyOSAction): MyOSData
       };
     }
     case "toggleTask": {
-      requireItem(current.tasks.find((task) => task.id === action.payload.id), "任务");
+      const task = requireItem(current.tasks.find((item) => item.id === action.payload.id), "任务");
+
+      // 完成带重复规则的任务时，自动生成下一轮（Todoist 式循环任务）。
+      // 已完成的这一条保留为历史记录，下一轮是全新任务，不再带 done 状态。
+      if (!task.done && task.recurrenceRule) {
+        const nextDate = nextOccurrenceDate(task.recurrenceRule, task.plannedDate || todayDateKey());
+        if (nextDate) {
+          const nextTask: Task = {
+            ...task,
+            id: randomUUID(),
+            plannedDate: nextDate,
+            status: "planned",
+            todayFocus: false,
+            done: false
+          };
+          return {
+            ...current,
+            tasks: [
+              nextTask,
+              ...current.tasks.map((item): Task =>
+                item.id === task.id
+                  ? { ...item, done: true, status: "completed", recurrenceRule: undefined }
+                  : item
+              )
+            ],
+            activities: [logActivity("完成重复任务", `${task.title}，下一轮 ${nextDate}`), ...current.activities]
+          };
+        }
+      }
+
       return {
         ...current,
-        tasks: current.tasks.map((task) =>
-          task.id === action.payload.id
+        tasks: current.tasks.map((item) =>
+          item.id === task.id
             ? {
-                ...task,
-                done: !task.done,
-                status: task.done ? "planned" : "completed"
+                ...item,
+                done: !item.done,
+                status: item.done ? "planned" : "completed"
               }
-            : task
+            : item
         )
       };
     }
@@ -208,6 +237,8 @@ export function applyMyOSAction(current: MyOSData, action: MyOSAction): MyOSData
         plannedDate: action.payload.plannedDate || todayKey(),
         status: "planned",
         todayFocus: Boolean(action.payload.todayFocus && todayFocusCount < 3),
+        recurrenceRule: action.payload.recurrenceRule,
+        reminderTime: action.payload.reminderTime,
         done: false
       };
       return {
@@ -232,6 +263,8 @@ export function applyMyOSAction(current: MyOSData, action: MyOSAction): MyOSData
                 plannedDate: action.payload.plannedDate,
                 todayFocus: Boolean(action.payload.todayFocus),
                 status: action.payload.status || task.status || "planned",
+                recurrenceRule: action.payload.recurrenceRule === undefined ? task.recurrenceRule : action.payload.recurrenceRule,
+                reminderTime: action.payload.reminderTime === undefined ? task.reminderTime : action.payload.reminderTime,
                 done: (action.payload.status || task.status) === "completed"
               }
             : task

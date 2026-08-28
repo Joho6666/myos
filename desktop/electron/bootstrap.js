@@ -32,9 +32,17 @@ N8N_REQUEST_TIMEOUT_MS=30000
 
 GITHUB_TOKEN=
 NOTION_TOKEN=
+
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_REFRESH_TOKEN=
+GOOGLE_REDIRECT_URI=http://localhost:3000/api/integrations/google/oauth/callback
+GOOGLE_CALENDAR_ID=primary
+GOOGLE_TASKS_LIST_ID=
+GOOGLE_DRIVE_FOLDER_ID=
+
+PYTHON_AGENT_BASE_URL=http://127.0.0.1:8765
+PYTHON_AGENT_TOKEN=
 `;
 
 function ensureDirs() {
@@ -57,10 +65,23 @@ function ensureEnvLocal() {
 
   // 旧版本首次启动只创建了空白模板，升级时补齐会话密钥但不覆盖用户已有配置。
   const current = fs.readFileSync(paths.envLocalPath, "utf8");
-  if (!/^\s*MYOS_SESSION_SECRET\s*=\s*\S.*$/m.test(current)) {
-    const next = /^\s*MYOS_SESSION_SECRET\s*=.*$/m.test(current)
-      ? current.replace(/^\s*MYOS_SESSION_SECRET\s*=.*$/m, `MYOS_SESSION_SECRET=${sessionSecret}`)
-      : `${current.replace(/\s*$/, "")}\nMYOS_SESSION_SECRET=${sessionSecret}\n`;
+  let next = current;
+  if (!/^\s*MYOS_SESSION_SECRET\s*=\s*\S.*$/m.test(next)) {
+    next = /^\s*MYOS_SESSION_SECRET\s*=.*$/m.test(next)
+      ? next.replace(/^\s*MYOS_SESSION_SECRET\s*=.*$/m, `MYOS_SESSION_SECRET=${sessionSecret}`)
+      : `${next.replace(/\s*$/, "")}\nMYOS_SESSION_SECRET=${sessionSecret}\n`;
+  }
+
+  // 模板新增的键（Google 集成、Python Agent 等）追加到旧配置末尾，
+  // 只补缺失的键名，不触碰用户已填写的任何值。
+  const missingKeys = [...ENV_TEMPLATE.matchAll(/^([\w.-]+)=/gm)]
+    .map((match) => match[1])
+    .filter((key) => !new RegExp(`^\\s*${key}\\s*=`,"m").test(next));
+  if (missingKeys.length > 0) {
+    next = `${next.replace(/\s*$/, "")}\n# 升级补充的配置项，按需填写\n${missingKeys.map((key) => `${key}=`).join("\n")}\n`;
+  }
+
+  if (next !== current) {
     fs.writeFileSync(paths.envLocalPath, next, "utf8");
   }
 }

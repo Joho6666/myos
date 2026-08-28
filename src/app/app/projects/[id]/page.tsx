@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Plus } from "lucide-react";
 import { ProjectAgentWorkspace } from "@/features/projects/project-agent-workspace";
 import { ProjectDeliveryView } from "@/features/projects/project-delivery-view";
 import { useMyOSData } from "@/lib/data/store";
+import { useCreationCenter } from "@/features/creation/creation-context";
 
 export default function ProjectDetailPage() {
+  const { openCreation } = useCreationCenter();
   const params = useParams<{ id: string }>();
   const { data } = useMyOSData();
   const project = data.projects.find((item) => item.id === params.id);
@@ -29,7 +32,7 @@ export default function ProjectDetailPage() {
           <h1>{project.name}</h1>
           <p>{project.category} / {project.path}</p>
         </div>
-        <span className={`badge ${project.status}`}>{project.status}</span>
+        <div className="project-detail-actions"><button className="primary-button" type="button" onClick={(event) => openCreation({ type: "task", trigger: event.currentTarget })}><Plus size={16} aria-hidden />新建任务</button><span className={`badge ${project.status}`}>{project.status}</span></div>
       </div>
       <div className="panel-grid">
         <section className="panel">

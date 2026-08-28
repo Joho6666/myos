@@ -202,8 +202,9 @@ export default function SettingsPage() {
       {error ? <p className="form-error">{error}</p> : null}
       <section className="panel settings-guide">
         <div className="panel-header"><h2>AI 配置入口</h2></div>
-        <p className="row-subtitle">API Provider 在本页的“AI 配置”中保存；保存后到 AI 工作台选择模型。Codex CLI 和 GitHub Copilot CLI 属于本机 Agent，请在能力中心管理，不要把它们的本地登录凭据复制到网页。</p>
+        <p className="row-subtitle">API Provider 在本页的“AI 配置”中保存；保存后到 AI 工作台选择模型。Google 配置好 Client ID 和 Client Secret 后，点击下方“连接 Google 账号”，一次授权 Calendar、Tasks、Drive 和 Gmail。Codex CLI 和 GitHub Copilot CLI 属于本机 Agent，请在能力中心管理，不要把它们的本地登录凭据复制到网页。</p>
         <div className="button-row">
+          <Link className="primary-button" href="/api/integrations/google/oauth/start">连接 Google 账号 <ExternalLink size={14} aria-hidden /></Link>
           <Link className="text-button" href="/app/ai">打开 AI 工作台 <ExternalLink size={14} aria-hidden /></Link>
           <Link className="text-button" href="/app/capabilities">管理 CLI、MCP 与 Skill <ExternalLink size={14} aria-hidden /></Link>
         </div>

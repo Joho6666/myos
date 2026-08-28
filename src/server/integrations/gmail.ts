@@ -1,7 +1,4 @@
-type GmailTokenResponse = {
-  access_token?: string;
-  error_description?: string;
-};
+export { refreshGoogleToken } from "./google";
 
 export type GmailListResponse = {
   messages?: Array<{ id?: string; threadId?: string }>;
@@ -36,33 +33,6 @@ export type GmailAttachmentResponse = {
 
 export function getGmailHeader(message: GmailMessage, name: string) {
   return message.payload?.headers?.find((header) => header.name?.toLowerCase() === name.toLowerCase())?.value || "";
-}
-
-export async function refreshGoogleToken(signal: AbortSignal) {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
-
-  if (!clientId || !clientSecret || !refreshToken) {
-    throw new Error("未配置 Google OAuth 凭据。");
-  }
-
-  const response = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-      grant_type: "refresh_token"
-    }),
-    signal
-  });
-  const body = (await response.json().catch(() => null)) as GmailTokenResponse | null;
-  if (!response.ok || !body?.access_token) {
-    throw new Error(body?.error_description || "Google token 刷新失败。");
-  }
-  return body.access_token;
 }
 
 export async function gmailFetch<T>(path: string, accessToken: string, signal: AbortSignal): Promise<T> {

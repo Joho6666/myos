@@ -10,8 +10,9 @@ const chatSchema = z.object({
   provider: z.string().min(1),
   model: z.string().optional(),
   system: z.string().max(4000).optional(),
-  message: z.string().min(1).max(12000)
-});
+  message: z.string().max(12000).optional(),
+  messages: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(12000) })).max(20).optional()
+}).refine((input) => Boolean(input.message?.trim() || input.messages?.length), { message: "AI 输入不能为空。" });
 
 export async function POST(request: Request) {
   const session = await getSession();
@@ -35,10 +36,11 @@ export async function POST(request: Request) {
   }
 
   try {
+    const messages = parsed.data.messages?.length ? parsed.data.messages : [{ role: "user" as const, content: parsed.data.message?.trim() || "" }];
     const result = await provider.chat({
       model: parsed.data.model || "",
       system: parsed.data.system,
-      messages: [{ role: "user", content: parsed.data.message }]
+      messages
     });
     return NextResponse.json(result);
   } catch (error) {

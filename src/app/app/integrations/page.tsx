@@ -78,6 +78,48 @@ type GmailSummary = {
   }>;
 };
 
+type GoogleCalendarSummary = {
+  calendarId: string;
+  events: Array<{
+    id: string;
+    summary: string;
+    description: string;
+    status: string;
+    htmlLink: string;
+    start: { date?: string; dateTime?: string };
+    end: { date?: string; dateTime?: string };
+    updated: string;
+  }>;
+};
+
+type GoogleTasksSummary = {
+  lists: Array<{ id: string; title: string }>;
+  listId: string;
+  tasks: Array<{
+    id: string;
+    title: string;
+    notes?: string;
+    status: "needsAction" | "completed";
+    due?: string;
+    updated?: string;
+    selfLink?: string;
+  }>;
+};
+
+type GoogleDriveSummary = {
+  folderId: string | null;
+  incompleteSearch: boolean;
+  files: Array<{
+    id: string;
+    name: string;
+    mimeType: string;
+    webViewLink?: string;
+    modifiedTime?: string;
+    size?: string;
+    description?: string;
+  }>;
+};
+
 type SyncSnapshot = {
   integrations: Array<{ provider: string; status: "success" | "failed" | "unconfigured"; syncStatus?: string; lastSyncedAt?: string }>;
   logs: Array<{ id: string; provider: string; status: "success" | "failed" | "unconfigured"; message: string; createdAt: string }>;
@@ -89,7 +131,10 @@ const iconMap = {
   notion: ScrollText,
   supabase: Database,
   n8n: Activity,
-  ai: Sparkles
+  ai: Sparkles,
+  "google-calendar": CalendarDays,
+  "google-tasks": ClipboardList,
+  "google-drive": Database
 };
 
 const platformCatalog = [
@@ -98,7 +143,9 @@ const platformCatalog = [
   { id: "notion", name: "Notion", category: "知识", detail: "把页面和数据库沉淀到 MyOS 知识库。", mode: "direct" as const, icon: ScrollText },
   { id: "supabase", name: "Supabase", category: "数据", detail: "MyOS 的私有数据、认证和文件底座。", mode: "direct" as const, icon: Database },
   { id: "n8n", name: "n8n", category: "自动化", detail: "让重复流程通过安全 Webhook 执行。", mode: "direct" as const, icon: Workflow },
-  { id: "google-calendar", name: "Google Calendar", category: "日程", detail: "通过 OAuth 或 MCP 汇总日程到今日视图。", mode: "mcp" as const, icon: CalendarDays },
+  { id: "google-calendar", name: "Google Calendar", category: "日程", detail: "读取手机端日程，并把 MyOS 任务写入日历。", mode: "direct" as const, icon: CalendarDays },
+  { id: "google-tasks", name: "Google Tasks", category: "任务", detail: "导入手机端任务，也能把 MyOS 待办回写。", mode: "direct" as const, icon: ClipboardList },
+  { id: "google-drive", name: "Google Drive", category: "文件", detail: "读取云端文件元数据，把链接带入文件中心。", mode: "direct" as const, icon: Database },
   { id: "linear", name: "Linear", category: "项目协作", detail: "通过 API 或 MCP 汇总 Issue 与周期计划。", mode: "mcp" as const, icon: ClipboardList },
   { id: "figma", name: "Figma", category: "设计", detail: "通过 MCP 为 Agent 提供设计上下文和实现线索。", mode: "mcp" as const, icon: Sparkles },
   { id: "vercel", name: "Vercel", category: "部署", detail: "通过 API 或 MCP 查看部署、构建和异常。", mode: "mcp" as const, icon: ServerCog },
@@ -111,10 +158,16 @@ export default function IntegrationsPage() {
   const [github, setGithub] = useState<GitHubSummary | null>(null);
   const [notion, setNotion] = useState<NotionSummary | null>(null);
   const [gmail, setGmail] = useState<GmailSummary | null>(null);
+  const [googleCalendar, setGoogleCalendar] = useState<GoogleCalendarSummary | null>(null);
+  const [googleTasks, setGoogleTasks] = useState<GoogleTasksSummary | null>(null);
+  const [googleDrive, setGoogleDrive] = useState<GoogleDriveSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);
   const [notionLoading, setNotionLoading] = useState(false);
   const [gmailLoading, setGmailLoading] = useState(false);
+  const [googleCalendarLoading, setGoogleCalendarLoading] = useState(false);
+  const [googleTasksLoading, setGoogleTasksLoading] = useState(false);
+  const [googleDriveLoading, setGoogleDriveLoading] = useState(false);
   const [allLoading, setAllLoading] = useState(false);
   const [importing, setImporting] = useState("");
   const [error, setError] = useState("");
@@ -124,6 +177,8 @@ export default function IntegrationsPage() {
   const [notionMessage, setNotionMessage] = useState("");
   const [gmailError, setGmailError] = useState("");
   const [gmailMessage, setGmailMessage] = useState("");
+  const [googleError, setGoogleError] = useState("");
+  const [googleMessage, setGoogleMessage] = useState("");
   const [syncSnapshot, setSyncSnapshot] = useState<SyncSnapshot>({ integrations: [], logs: [] });
   const [syncLoading, setSyncLoading] = useState(false);
   const connectedCount = integrations.filter((item) => item.state === "connected").length;
@@ -195,14 +250,26 @@ export default function IntegrationsPage() {
         tone: message.important ? "urgent" as const : "mail" as const,
         action: "进收件箱"
       })) || [];
-    return [...issueSignals, ...gmailSignals, ...repoSignals, ...notionSignals].slice(0, 10);
-  }, [github, gmail, inboxTitles, noteTitles, notion, projectNames, taskKeys]);
+    const taskSignals = googleTasks?.tasks
+      .filter((task) => task.status !== "completed")
+      .filter((task) => !taskKeys.has(`google tasks::${task.title}`.toLowerCase()))
+      .slice(0, 4)
+      .map((task) => ({
+        id: `google-task:${task.id}`,
+        source: "Google Tasks",
+        title: task.title,
+        detail: task.due ? `截止 ${formatDate(task.due)}` : "手机端任务",
+        tone: "work" as const,
+        action: "导入任务"
+      })) || [];
+    return [...issueSignals, ...gmailSignals, ...taskSignals, ...repoSignals, ...notionSignals].slice(0, 10);
+  }, [github, gmail, googleTasks, inboxTitles, noteTitles, notion, projectNames, taskKeys]);
   const focusBrief = useMemo(() => {
     if (loading) return "正在读取连接状态，请稍候。";
     if (error && !integrations.length) return "连接状态读取失败，请检查服务端配置后重试。";
     if (!integrations.length) return "先刷新连接状态，确认 MyOS 能看到哪些外部系统。";
     if (errorCount > 0) return "有连接异常，先处理异常连接，避免看板数据不完整。";
-    if (unconfiguredCount > 0) return "还有外部系统未接入，优先配置你最常用的 GitHub、Gmail 或 Notion。";
+    if (unconfiguredCount > 0) return "还有外部系统未接入，优先配置 Google 日历、Tasks 和你最常用的工作平台。";
     if (externalSignals.length > 0) return "已经有外部信号可处理，建议把重要内容导入 MyOS。";
     return "连接状态干净，可以继续用 MyOS 作为日常总控台。";
   }, [error, errorCount, externalSignals.length, integrations.length, loading, unconfiguredCount]);
@@ -212,6 +279,9 @@ export default function IntegrationsPage() {
       { id: "supabase", title: "数据库", detail: "保存项目、任务、文件记录和活动日志", done: configured.has("supabase") },
       { id: "github", title: "GitHub", detail: "读取仓库、Issue、Star 并转入项目中心", done: configured.has("github") },
       { id: "gmail", title: "Gmail", detail: "读取近期邮件，把需求和资料收进收件箱", done: configured.has("gmail") },
+      { id: "google-calendar", title: "Google Calendar", detail: "把手机端日程带进 MyOS，并可回写任务", done: configured.has("google-calendar") },
+      { id: "google-tasks", title: "Google Tasks", detail: "导入和回写手机端任务", done: configured.has("google-tasks") },
+      { id: "google-drive", title: "Google Drive", detail: "把云端文件链接带进文件中心", done: configured.has("google-drive") },
       { id: "notion", title: "Notion", detail: "读取页面和数据库，沉淀到知识库", done: configured.has("notion") },
       { id: "ai", title: "AI", detail: "用 AI 工作台总结外部信息和生成下一步", done: configured.has("ai") },
       { id: "n8n", title: "n8n", detail: "让日报、文档分析和项目周报自动运行", done: configured.has("n8n") }
@@ -284,6 +354,54 @@ export default function IntegrationsPage() {
     }
   }
 
+  async function loadGoogleCalendarSummary() {
+    setGoogleCalendarLoading(true);
+    setGoogleError("");
+    try {
+      const response = await fetch("/api/integrations/google/calendar/summary", { cache: "no-store" });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.error || "读取 Google Calendar 失败。");
+      setGoogleCalendar(body);
+    } catch (summaryError) {
+      setGoogleCalendar(null);
+      setGoogleError(summaryError instanceof Error ? summaryError.message : "读取 Google Calendar 失败。");
+    } finally {
+      setGoogleCalendarLoading(false);
+    }
+  }
+
+  async function loadGoogleTasksSummary() {
+    setGoogleTasksLoading(true);
+    setGoogleError("");
+    try {
+      const response = await fetch("/api/integrations/google/tasks/summary", { cache: "no-store" });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.error || "读取 Google Tasks 失败。");
+      setGoogleTasks(body);
+    } catch (summaryError) {
+      setGoogleTasks(null);
+      setGoogleError(summaryError instanceof Error ? summaryError.message : "读取 Google Tasks 失败。");
+    } finally {
+      setGoogleTasksLoading(false);
+    }
+  }
+
+  async function loadGoogleDriveSummary() {
+    setGoogleDriveLoading(true);
+    setGoogleError("");
+    try {
+      const response = await fetch("/api/integrations/google/drive/summary", { cache: "no-store" });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.error || "读取 Google Drive 失败。");
+      setGoogleDrive(body);
+    } catch (summaryError) {
+      setGoogleDrive(null);
+      setGoogleError(summaryError instanceof Error ? summaryError.message : "读取 Google Drive 失败。");
+    } finally {
+      setGoogleDriveLoading(false);
+    }
+  }
+
   async function loadSyncStatus() {
     setSyncLoading(true);
     try {
@@ -307,8 +425,10 @@ export default function IntegrationsPage() {
     setGithubMessage("");
     setNotionMessage("");
     setGmailMessage("");
+    setGoogleError("");
+    setGoogleMessage("");
     try {
-      await Promise.allSettled([refresh(), loadGitHubSummary(), loadNotionSummary(), loadGmailSummary()]);
+      await Promise.allSettled([refresh(), loadGitHubSummary(), loadNotionSummary(), loadGmailSummary(), loadGoogleCalendarSummary(), loadGoogleTasksSummary(), loadGoogleDriveSummary()]);
       await loadSyncStatus();
     } finally {
       setAllLoading(false);
@@ -429,12 +549,79 @@ export default function IntegrationsPage() {
     }
   }
 
+  async function importGoogleTasks() {
+    setImporting("google-tasks:all");
+    setGoogleError("");
+    setGoogleMessage("");
+    try {
+      const response = await fetch("/api/integrations/google/tasks/import", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({}) });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.error || "导入 Google Tasks 失败。");
+      if (body?.data) publishMyOSData(body.data);
+      setGoogleMessage(body?.message || "Google Tasks 已导入 MyOS。");
+    } catch (importError) {
+      setGoogleError(importError instanceof Error ? importError.message : "导入 Google Tasks 失败。");
+    } finally {
+      setImporting("");
+    }
+  }
+
+  async function pushTaskToGoogle(taskId: string, target: "tasks" | "calendar") {
+    const key = `google-${target}:${taskId}`;
+    setImporting(key);
+    setGoogleError("");
+    setGoogleMessage("");
+    try {
+      const response = await fetch(`/api/integrations/google/${target}/push`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ taskId }) });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.error || `写入 Google ${target === "tasks" ? "Tasks" : "Calendar"} 失败。`);
+      setGoogleMessage(body?.message || "已同步到 Google。");
+    } catch (pushError) {
+      setGoogleError(pushError instanceof Error ? pushError.message : "写入 Google 失败。");
+    } finally {
+      setImporting("");
+    }
+  }
+
+  async function importGoogleDrive(fileId?: string) {
+    const key = `google-drive:${fileId || "all"}`;
+    setImporting(key);
+    setGoogleError("");
+    setGoogleMessage("");
+    try {
+      const response = await fetch("/api/integrations/google/drive/import", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(fileId ? { fileIds: [fileId] } : {}) });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.error || "导入 Google Drive 失败。");
+      if (body?.data) publishMyOSData(body.data);
+      setGoogleMessage(body?.message || "Google Drive 文件已登记到 MyOS。");
+    } catch (importError) {
+      setGoogleError(importError instanceof Error ? importError.message : "导入 Google Drive 失败。");
+    } finally {
+      setImporting("");
+    }
+  }
+
   function formatDate(value: string) {
     if (!value) return "未知";
     return new Intl.DateTimeFormat("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
   }
 
+  function formatGoogleEventDate(event: GoogleCalendarSummary["events"][number]) {
+    if (event.start.date) return `${event.start.date} 全天`;
+    return formatDate(event.start.dateTime || "");
+  }
+
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const googleState = params.get("google");
+    const googleNotice = params.get("message");
+    if (googleState === "connected") {
+      setGoogleMessage(googleNotice || "Google 已连接。");
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (googleState === "error") {
+      setGoogleError(googleNotice || "Google 授权失败。");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
     void refresh();
     void loadSyncStatus();
   }, []);
@@ -481,6 +668,15 @@ export default function IntegrationsPage() {
         <button className="text-button" type="button" onClick={loadGmailSummary} disabled={gmailLoading}>
           <Mail size={16} aria-hidden />{gmailLoading ? "读取中" : "读取 Gmail"}
         </button>
+        <button className="text-button" type="button" onClick={loadGoogleCalendarSummary} disabled={googleCalendarLoading}>
+          <CalendarDays size={16} aria-hidden />{googleCalendarLoading ? "读取中" : "读取日历"}
+        </button>
+        <button className="text-button" type="button" onClick={loadGoogleTasksSummary} disabled={googleTasksLoading}>
+          <ClipboardList size={16} aria-hidden />{googleTasksLoading ? "读取中" : "读取 Tasks"}
+        </button>
+        <button className="text-button" type="button" onClick={loadGoogleDriveSummary} disabled={googleDriveLoading}>
+          <Database size={16} aria-hidden />{googleDriveLoading ? "读取中" : "读取 Drive"}
+        </button>
         <Link className="text-button" href="/app/settings">集成设置</Link>
       </div>
       {error ? <p className="form-error">{error}</p> : null}
@@ -490,6 +686,8 @@ export default function IntegrationsPage() {
       {notionMessage ? <p className="config-message">{notionMessage}</p> : null}
       {gmailError ? <p className="form-error">{gmailError}</p> : null}
       {gmailMessage ? <p className="config-message">{gmailMessage}</p> : null}
+      {googleError ? <p className="form-error">{googleError}</p> : null}
+      {googleMessage ? <p className="config-message">{googleMessage}</p> : null}
 
       <section className="panel platform-catalog" aria-labelledby="platform-catalog-heading">
         <div className="panel-header">
@@ -560,7 +758,7 @@ export default function IntegrationsPage() {
               ))}
               {!externalSignals.length ? (
                 <div className="empty-state compact">
-                  还没有读取到外部待处理内容。先点击“一键刷新全部”，或到设置里配置 GitHub、Gmail、Notion。
+                  还没有读取到外部待处理内容。先点击“一键刷新全部”，或到设置里配置 Google、GitHub、Gmail、Notion。
                 </div>
               ) : null}
             </div>
@@ -768,6 +966,45 @@ export default function IntegrationsPage() {
                 {!gmail.messages.length ? <div className="empty-state compact">最近 30 天收件箱没有读取到邮件。</div> : null}
               </div>
             )}
+          </section>
+
+          <section className="panel">
+            <div className="panel-header">
+              <div><h2>Google Calendar 日程</h2><p className="panel-description">读取手机端未来 7 天日程；写入操作只会创建或更新你明确选择的 MyOS 任务。</p></div>
+              <button className="text-button" type="button" onClick={loadGoogleCalendarSummary} disabled={googleCalendarLoading}><RefreshCw size={15} aria-hidden />{googleCalendarLoading ? "读取中" : "刷新"}</button>
+            </div>
+            {!googleCalendar ? <div className="empty-state compact">{googleError || "配置 Google OAuth 并授予 Calendar scope 后，这里会显示手机端日程。"}</div> : <div className="table-list">
+              {googleCalendar.events.map((event) => <a className="row" href={event.htmlLink} target="_blank" rel="noreferrer" key={event.id}>
+                <span><span className="row-title">{event.summary || "无标题日程"}</span><span className="row-subtitle">{formatGoogleEventDate(event)} / Google Calendar</span></span><ExternalLink size={15} aria-hidden />
+              </a>)}
+              {!googleCalendar.events.length ? <div className="empty-state compact">未来 7 天没有日程。</div> : null}
+            </div>}
+          </section>
+
+          <section className="panel">
+            <div className="panel-header">
+              <div><h2>Google Tasks 任务</h2><p className="panel-description">手机端新增的任务可以导入 MyOS；MyOS 任务也能逐条回写到当前 Google Tasks 清单。</p></div>
+              <span style={{ display: "inline-flex", gap: 8 }}><button className="text-button" type="button" onClick={loadGoogleTasksSummary} disabled={googleTasksLoading}><RefreshCw size={15} aria-hidden />{googleTasksLoading ? "读取中" : "刷新"}</button><button className="primary-button" type="button" onClick={importGoogleTasks} disabled={!googleTasks || importing === "google-tasks:all"}>{importing === "google-tasks:all" ? "同步中" : "同步到 MyOS"}</button></span>
+            </div>
+            {!googleTasks ? <div className="empty-state compact">{googleError || "配置 Google OAuth 并授予 Tasks scope 后，这里会显示手机端任务。"}</div> : <div className="table-list">
+              {googleTasks.tasks.slice(0, 20).map((task) => <div className="row" key={task.id}>
+                <span><span className="row-title">{task.title}</span><span className="row-subtitle">{task.status === "completed" ? "已完成" : task.due ? `截止 ${formatDate(task.due)}` : "未设置截止时间"}</span></span><span className={`badge ${task.status === "completed" ? "success" : "warning"}`}>{task.status === "completed" ? "完成" : "待办"}</span>
+              </div>)}
+              {!googleTasks.tasks.length ? <div className="empty-state compact">当前任务清单为空。</div> : null}
+            </div>}
+            {data.tasks.filter((task) => !task.done).slice(0, 6).length ? <div className="config-list" style={{ marginTop: 12 }}><div className="config-row"><div><div className="row-title">回写 MyOS 任务</div><div className="row-subtitle">每个任务需要单独确认，避免意外批量写入。</div></div><div className="table-list">{data.tasks.filter((task) => !task.done).slice(0, 6).map((task) => <div className="row" key={task.id}><span><span className="row-title">{task.title}</span><span className="row-subtitle">{task.project || "未关联项目"}</span></span><span style={{ display: "inline-flex", gap: 8 }}><button className="text-button" type="button" disabled={importing === `google-tasks:${task.id}`} onClick={() => pushTaskToGoogle(task.id, "tasks")}>{importing === `google-tasks:${task.id}` ? "同步中" : "写入 Tasks"}</button><button className="text-button" type="button" disabled={importing === `google-calendar:${task.id}`} onClick={() => pushTaskToGoogle(task.id, "calendar")}>{importing === `google-calendar:${task.id}` ? "同步中" : "写入日历"}</button></span></div>)}</div></div></div> : null}
+          </section>
+
+          <section className="panel">
+            <div className="panel-header">
+              <div><h2>Google Drive 文件</h2><p className="panel-description">先同步文件名、类型、修改时间和云端链接，不自动下载内容。</p></div>
+              <span style={{ display: "inline-flex", gap: 8 }}><button className="text-button" type="button" onClick={loadGoogleDriveSummary} disabled={googleDriveLoading}><RefreshCw size={15} aria-hidden />{googleDriveLoading ? "读取中" : "刷新"}</button><button className="primary-button" type="button" onClick={() => importGoogleDrive()} disabled={!googleDrive || importing === "google-drive:all"}>{importing === "google-drive:all" ? "登记中" : "登记最近文件"}</button></span>
+            </div>
+            {!googleDrive ? <div className="empty-state compact">{googleError || "配置 Google OAuth 并授予 Drive 只读 scope 后，这里会显示云端文件。"}</div> : <div className="table-list">
+              {googleDrive.files.slice(0, 20).map((file) => <div className="row" key={file.id}><span>{file.webViewLink ? <a className="row-title" href={file.webViewLink} target="_blank" rel="noreferrer">{file.name}</a> : <span className="row-title">{file.name}</span>}<span className="row-subtitle">{file.mimeType} / {file.modifiedTime ? formatDate(file.modifiedTime) : "时间未知"}</span></span><button className="text-button" type="button" disabled={importing === `google-drive:${file.id}`} onClick={() => importGoogleDrive(file.id)}>{importing === `google-drive:${file.id}` ? "登记中" : "登记到文件中心"}</button></div>)}
+              {!googleDrive.files.length ? <div className="empty-state compact">Google Drive 当前没有可读取的文件。</div> : null}
+              {googleDrive.incompleteSearch ? <div className="empty-state compact">Google Drive 返回了不完整搜索结果，建议在设置中配置一个文件夹 ID 缩小范围。</div> : null}
+            </div>}
           </section>
         </div>
 

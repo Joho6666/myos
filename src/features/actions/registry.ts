@@ -13,7 +13,7 @@ export type MyOSActionDefinition = {
 };
 
 const baseActions: MyOSActionDefinition[] = [
-  { id: "create-project", label: "新建项目", description: "打开项目中心的快速创建入口", keywords: ["项目", "project", "create"], icon: "folder-plus", href: "/app/projects", type: "create", enabled: true, group: "capture" },
+  { id: "create-project", label: "新建项目", description: "在统一创建中心中确认项目内容", keywords: ["项目", "project", "create"], icon: "folder-plus", href: "/app/projects", type: "create", enabled: true, group: "capture" },
   { id: "create-task", label: "新建任务", description: "记录今天或某个项目的下一步行动", keywords: ["任务", "todo", "task"], icon: "check-square", href: "/app/tasks", type: "create", enabled: true, group: "capture" },
   { id: "capture-inbox", label: "记录想法", description: "写入万能收件箱，稍后分类", keywords: ["收件箱", "灵感", "inbox"], icon: "inbox", href: "/app/inbox", type: "create", enabled: true, group: "capture" },
   { id: "upload-file", label: "上传文件", description: "进入文件中心保存资料", keywords: ["文件", "上传", "pdf", "word"], icon: "upload", href: "/app/files", type: "create", enabled: true, group: "capture" },

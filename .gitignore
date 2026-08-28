@@ -19,6 +19,7 @@ local-agent/agent.config.json
 
 # 桌面版打包产物
 dist
+dist-release-*/
 desktop/build
 desktop/logs
 .env.local.buildbak
@@ -30,3 +31,11 @@ python-agent/.venv
 __pycache__
 *.py[cod]
 .pytest_cache
+
+# Android & Logs
+*.log
+*.apk
+android/.gradle
+android/build
+android/app/build
+android/local.properties

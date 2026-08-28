@@ -19,6 +19,7 @@ export class ConfigValidationError extends Error {
 export const configFields: ConfigField[] = [
   { key: "OWNER_EMAIL", label: "拥有者邮箱", group: "owner", secret: false, description: "只允许这个邮箱登录 MyOS。", placeholder: "owner@example.com" },
   { key: "MYOS_SESSION_SECRET", label: "会话签名密钥", group: "owner", secret: true, description: "用于签名私人登录会话，建议使用至少 32 个字符的随机值。" },
+  { key: "MYOS_QUICK_API_TOKEN", label: "快捷 API / 小组件 Token", group: "owner", secret: true, description: "用于 iOS 快捷指令闪念胶囊、Scriptable 小组件等免登录直接写入收件箱或读取待办。" },
   { key: "NEXT_PUBLIC_APP_URL", label: "应用地址", group: "owner", secret: false, description: "OpenRouter、OAuth 和部署回调用到的站点地址。", placeholder: "http://localhost:3000" },
   { key: "NEXT_PUBLIC_SUPABASE_URL", label: "Supabase URL", group: "database", secret: false, description: "Supabase 项目 URL。" },
   { key: "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", label: "Supabase Publishable Key", group: "database", secret: false, description: "可公开的 Supabase anon/publishable key。" },
@@ -34,9 +35,13 @@ export const configFields: ConfigField[] = [
   { key: "N8N_REQUEST_TIMEOUT_MS", label: "n8n Timeout", group: "automation", secret: false, description: "n8n 请求超时毫秒数。", placeholder: "30000" },
   { key: "GITHUB_TOKEN", label: "GitHub Token", group: "external", secret: true, description: "用于连接看板检测 GitHub，后续同步仓库和 Issue。" },
   { key: "NOTION_TOKEN", label: "Notion Token", group: "external", secret: true, description: "用于连接 Notion 工作区。" },
-  { key: "GOOGLE_CLIENT_ID", label: "Google Client ID", group: "external", secret: false, description: "用于 Gmail OAuth。" },
-  { key: "GOOGLE_CLIENT_SECRET", label: "Google Client Secret", group: "external", secret: true, description: "用于 Gmail OAuth，只保存在服务端。" },
-  { key: "GOOGLE_REFRESH_TOKEN", label: "Google Refresh Token", group: "external", secret: true, description: "用于服务端刷新 Gmail access token。" },
+  { key: "GOOGLE_CLIENT_ID", label: "Google Client ID", group: "external", secret: false, description: "用于 Gmail、Calendar、Tasks 和 Drive OAuth。" },
+  { key: "GOOGLE_CLIENT_SECRET", label: "Google Client Secret", group: "external", secret: true, description: "用于 Gmail、Calendar、Tasks 和 Drive OAuth，只保存在服务端。" },
+  { key: "GOOGLE_REFRESH_TOKEN", label: "Google Refresh Token", group: "external", secret: true, description: "用于服务端刷新 Google access token；必须包含你要使用的 Google API scopes。" },
+  { key: "GOOGLE_REDIRECT_URI", label: "Google OAuth 回调地址", group: "external", secret: false, description: "可选。默认是当前应用地址加 /api/integrations/google/oauth/callback；需与 Google Cloud 中的重定向 URI 完全一致。" },
+  { key: "GOOGLE_CALENDAR_ID", label: "Google Calendar ID", group: "external", secret: false, description: "可选。默认使用 primary 日历。", placeholder: "primary" },
+  { key: "GOOGLE_TASKS_LIST_ID", label: "Google Tasks 清单 ID", group: "external", secret: false, description: "可选。留空时使用第一个任务清单。" },
+  { key: "GOOGLE_DRIVE_FOLDER_ID", label: "Google Drive 文件夹 ID", group: "external", secret: false, description: "可选。只读取指定文件夹，留空时读取最近文件。" },
   { key: "LOCAL_AGENT_BASE_URL", label: "Local Agent URL", group: "external", secret: false, description: "Windows 本地助手地址，仅服务端调用。", placeholder: "http://127.0.0.1:43110" },
   { key: "LOCAL_AGENT_TOKEN", label: "Local Agent Token", group: "external", secret: true, description: "MyOS 服务端调用本地助手使用的本地密钥。" },
   { key: "PYTHON_AGENT_BASE_URL", label: "Python Agent Runtime URL", group: "external", secret: false, description: "本机 Python Agent Runtime 地址，仅服务端调用。", placeholder: "http://127.0.0.1:43200" },
@@ -119,7 +124,7 @@ function validateRuntimeConfigValue(field: ConfigField, value: string) {
     throw new ConfigValidationError("会话签名密钥至少需要 32 个字符。");
   }
 
-  if (["NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_SUPABASE_URL", "OLLAMA_BASE_URL", "N8N_BASE_URL", "LOCAL_AGENT_BASE_URL", "PYTHON_AGENT_BASE_URL"].includes(field.key)) {
+  if (["NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_SUPABASE_URL", "OLLAMA_BASE_URL", "N8N_BASE_URL", "LOCAL_AGENT_BASE_URL", "PYTHON_AGENT_BASE_URL", "GOOGLE_REDIRECT_URI"].includes(field.key)) {
     validateUrl(value, field.label);
   }
 
@@ -194,3 +199,4 @@ export async function updateRuntimeConfig(updates: Record<string, string>) {
   await writeFile(envLocalPath, serializeEnv(values), "utf8");
   return await readRuntimeConfig();
 }
+

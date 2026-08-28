@@ -68,7 +68,7 @@ Local command execution, opening folders, opening VS Code, and script execution 
 
 The page is now the MyOS external systems overview. It combines:
 
-- Connection health for database, AI, n8n, GitHub, Gmail, and Notion.
+- Connection health for database, AI, n8n, GitHub, Gmail, Google Calendar, Google Tasks, Google Drive, and Notion.
 - One-click refresh for all connected summaries.
 - External signal triage from GitHub repositories/issues, unread or important Gmail messages, and recent Notion pages/databases.
 - Import actions that turn external items into MyOS projects, tasks, inbox items, or knowledge notes.
@@ -84,6 +84,9 @@ The main dashboard (`/app`) also reads the same sanitized status endpoint and su
 - GitHub via `GITHUB_TOKEN`
 - Notion via `NOTION_TOKEN`
 - Gmail via `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REFRESH_TOKEN`
+- Google Calendar via the same Google OAuth credentials and Calendar API access
+- Google Tasks via the same Google OAuth credentials and Tasks API access
+- Google Drive via the same Google OAuth credentials and Drive read-only access
 
 The API returns only sanitized status messages. It must never return tokens or secrets to the browser.
 
@@ -174,7 +177,9 @@ Attachment import rules:
 
 `/app/tools` also embeds the same allowlisted runtime configuration editor so the owner can configure tool dependencies without leaving the Tools Center. This includes base app settings, Supabase, AI providers, n8n, GitHub, Gmail, and Notion. The embedded editor uses `/api/config/env`, so it keeps the same authentication, secret masking, validation, and `.env.local` persistence rules as Settings.
 
-The settings page also includes a connection test panel. After saving or clearing a configuration field, MyOS refreshes `/api/integrations/status` so the owner can immediately see whether database, AI, n8n, GitHub, Gmail, and Notion are usable, unconfigured, or failing.
+The settings page also includes a connection test panel. After saving or clearing a configuration field, MyOS refreshes `/api/integrations/status` so the owner can immediately see whether database, AI, n8n, GitHub, Gmail, Google Calendar, Google Tasks, Google Drive, and Notion are usable, unconfigured, or failing.
+
+For Google, Settings also provides a server-side OAuth start/callback flow. After configuring the Google OAuth client and registering the exact callback URL, the owner can authorize Gmail, Calendar, Tasks, and Drive once; the returned refresh token is stored only in the server-side runtime environment.
 
 `/api/config/env` reads and updates an allowlisted set of runtime variables in `.env.local`.
 

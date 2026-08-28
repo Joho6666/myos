@@ -57,14 +57,14 @@ export const navItems = [
   { href: "/app/capabilities", label: "能力中心", icon: Wrench }
 ];
 
-export const primaryNavItems = [navItems[0], navItems[8], navItems[2], navItems[18]];
+export const primaryNavItems = [navItems[0], navItems[1], navItems[2], navItems[7]];
 
 export const navGroups = [
-  { label: "今日", description: "每天最常用的入口", icon: LayoutDashboard, items: [navItems[0]] },
-  { label: "工作", description: "任务、项目与 Agent 协作", icon: Layers3, items: [navItems[1], navItems[2], navItems[8], navItems[22], navItems[23]] },
-  { label: "AI 与自动化", description: "模型、工具和外部连接", icon: Sparkles, items: [navItems[7], navItems[12], navItems[13], navItems[18], navItems[19], navItems[24]] },
-  { label: "知识与生活", description: "资料沉淀与长期节奏", icon: BookOpen, items: [navItems[9], navItems[10], navItems[11], navItems[17], navItems[3], navItems[4], navItems[5], navItems[6], navItems[14]] },
-  { label: "专业与系统", description: "专业工作和系统管理", icon: SlidersHorizontal, items: [navItems[15], navItems[16], navItems[20], navItems[21]] }
+  { label: "执行", description: "每天最常用的入口", icon: LayoutDashboard, items: primaryNavItems },
+  { label: "工作资料", description: "项目、资料与知识沉淀", icon: Layers3, items: [navItems[8], navItems[9], navItems[10], navItems[11], navItems[17]] },
+  { label: "自动化与连接", description: "工具、Agent 和外部服务", icon: Sparkles, items: [navItems[12], navItems[13], navItems[18], navItems[19], navItems[22], navItems[23], navItems[24]] },
+  { label: "生活", description: "长期目标和个人节奏", icon: BookOpen, items: [navItems[3], navItems[4], navItems[5], navItems[6], navItems[14]] },
+  { label: "系统", description: "专业模块和系统管理", icon: SlidersHorizontal, items: [navItems[15], navItems[16], navItems[20], navItems[21]] }
 ];
 
 export const moreNavSections = navGroups.slice(1);

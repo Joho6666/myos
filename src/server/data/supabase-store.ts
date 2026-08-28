@@ -2,7 +2,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 import { seedData } from "@/lib/data/seed";
 import type { Activity, AgentAssignment, AgentReport, AgentWorkItem, AutomationRun, DailyCheckin, DailyReview, FileRecord, Goal, Habit, HabitLog, InboxItem, LifeArea, MyOSData, Note, PrivacyLevel, Project, Prompt, Routine, RoutineLog, RoutineStep, Task, WeeklyReview } from "@/lib/data/models";
-import { dateOnly, todayAlias } from "./date-utils";
+import { dateOnly, nextOccurrenceDate, todayAlias } from "./date-utils";
 import type { MyOSSession } from "@/lib/auth/session";
 import type { MyOSAction } from "./schemas";
 import type { AgentWorkEvent, ProjectMilestone, ProjectRisk } from "@/lib/data/models";
@@ -185,7 +185,7 @@ function mapTask(row: Row): Task {
     actualMinutes: numberValue(row.actual_minutes),
     status: text(row.status, "planned") as Task["status"],
     todayFocus: bool(row.today_focus),
-    recurrenceRule: text(row.recurrence_rule) || undefined,
+    recurrenceRule: (text(row.recurrence_rule) || undefined) as Task["recurrenceRule"],
     done: text(row.status) === "completed"
   };
 }
@@ -235,7 +235,7 @@ function mapFile(row: Row): FileRecord {
     project: text(row.category, "未关联"),
     size: text(row.display_size) || `${Number(row.size_bytes ?? 0)} B`,
     mimeType: text(row.mime_type),
-    sourceUrl: downloadable ? `/api/files/download/${text(row.id)}` : undefined,
+    sourceUrl: text(row.source_url) || (downloadable ? `/api/files/download/${text(row.id)}` : undefined),
     storagePath,
     updatedAt: dateLabel(row.updated_at)
   };
@@ -304,7 +304,7 @@ function mapHabit(row: Row): Habit {
     name: text(row.name),
     description: text(row.description),
     frequencyType: text(row.frequency_type, "daily") as Habit["frequencyType"],
-    recurrenceRule: text(row.recurrence_rule) || undefined,
+    recurrenceRule: (text(row.recurrence_rule) || undefined) as Habit["recurrenceRule"],
     targetValue: numberValue(row.target_value),
     unit: text(row.unit) || undefined,
     reminderTime: text(row.reminder_time) || undefined,
@@ -333,7 +333,7 @@ function mapRoutine(row: Row): Routine {
     name: text(row.name),
     description: text(row.description),
     scheduleType: text(row.schedule_type, "daily") as Routine["scheduleType"],
-    recurrenceRule: text(row.recurrence_rule) || undefined,
+    recurrenceRule: (text(row.recurrence_rule) || undefined) as Routine["recurrenceRule"],
     status: text(row.status, "active") as Routine["status"],
     privacyLevel: privacy(row.privacy_level),
     updatedAt: dateLabel(row.updated_at)
@@ -1487,14 +1487,40 @@ export async function applyMyOSActionToSupabase(session: MyOSSession, action: My
       }
     case "toggleTask": {
       const task = await requireOk(
-        client.from("project_tasks").select("status").eq("user_id", userId).eq("id", action.payload.id).single(),
+        client.from("project_tasks").select("status, recurrence_rule, planned_date, title, priority, project_name, due_text, goal_id").eq("user_id", userId).eq("id", action.payload.id).single(),
         "读取任务"
       );
-      const nextStatus = text((task as Row).status) === "completed" ? "planned" : "completed";
+      const row = task as Row;
+      const wasCompleted = text(row.status) === "completed";
+      const nextStatus = wasCompleted ? "planned" : "completed";
+      const rule = text(row.recurrence_rule);
       await requireOk(
-        client.from("project_tasks").update({ status: nextStatus, updated_at: new Date().toISOString() }).eq("user_id", userId).eq("id", action.payload.id).select("id").single(),
+        client.from("project_tasks").update({ status: nextStatus, recurrence_rule: nextStatus === "completed" ? null : rule, updated_at: new Date().toISOString() }).eq("user_id", userId).eq("id", action.payload.id).select("id").single(),
         "更新任务"
       );
+
+      // 完成带重复规则的任务时生成下一轮，与本地文件后端行为一致。
+      if (nextStatus === "completed" && rule) {
+        const nextDate = nextOccurrenceDate(rule, text(row.planned_date) || "today");
+        if (nextDate) {
+          await requireOk(
+            client.from("project_tasks").insert({
+              user_id: userId,
+              goal_id: row.goal_id ?? null,
+              title: text(row.title),
+              status: "planned",
+              priority: text(row.priority) || "medium",
+              project_name: text(row.project_name) || null,
+              due_text: text(row.due_text) || "今天",
+              planned_date: nextDate,
+              today_focus: false,
+              recurrence_rule: rule
+            }),
+            "创建重复任务"
+          );
+          await insertActivity(client, userId, "完成重复任务", `${text(row.title)}，下一轮 ${nextDate}`);
+        }
+      }
       break;
     }
     case "addTask": {
@@ -1510,7 +1536,9 @@ export async function applyMyOSActionToSupabase(session: MyOSSession, action: My
           project_name: action.payload.project,
           due_text: action.payload.due || "今天",
           planned_date: dateOnly(action.payload.plannedDate || "today"),
-          today_focus: Boolean(action.payload.todayFocus && todayFocusCount < 3)
+          today_focus: Boolean(action.payload.todayFocus && todayFocusCount < 3),
+          recurrence_rule: action.payload.recurrenceRule ?? null,
+          reminder_time: action.payload.reminderTime || null
         }),
         "创建任务"
       );
@@ -1530,6 +1558,8 @@ export async function applyMyOSActionToSupabase(session: MyOSSession, action: My
             due_text: action.payload.due || "今天",
             planned_date: dateOnly(action.payload.plannedDate || "today"),
             today_focus: Boolean(action.payload.todayFocus),
+            recurrence_rule: action.payload.recurrenceRule ?? null,
+            reminder_time: action.payload.reminderTime || null,
             updated_at: new Date().toISOString()
           })
           .eq("user_id", userId)
@@ -1682,7 +1712,8 @@ export async function applyMyOSActionToSupabase(session: MyOSSession, action: My
           size_bytes: Number.parseInt(action.payload.size || "0", 10) || 0,
           display_size: action.payload.size || "未知",
           storage_path: action.payload.storagePath || `manual/${randomUUID()}`,
-          category: action.payload.project || "未关联"
+          category: action.payload.project || "未关联",
+          source_url: action.payload.sourceUrl || null
         }),
         "登记文件"
       );
