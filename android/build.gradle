@@ -3,6 +3,8 @@
 buildscript {
     
     repositories {
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/central' }
         google()
         mavenCentral()
     }
@@ -19,8 +21,24 @@ apply from: "variables.gradle"
 
 allprojects {
     repositories {
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/central' }
         google()
         mavenCentral()
+    }
+}
+
+// Capacitor 7 defaults to Java 21, while the Android build environment used
+// by this project ships with the LTS JDK 17. Keep all Android modules aligned
+// so `cap sync` followed by a build remains reproducible on JDK 17.
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android.compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
+            }
+        }
     }
 }
 

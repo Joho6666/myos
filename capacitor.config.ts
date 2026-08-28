@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
   server: {
     // 默认可指定云端部署地址（例如 https://myos.vercel.app）或局域网 IP
     // 如果设置了环境变量 CAPACITOR_SERVER_URL 则优先使用
-    url: process.env.CAPACITOR_SERVER_URL || "http://192.168.1.8:3010",
+    url: process.env.CAPACITOR_SERVER_URL || "https://myos-mobile-git-main-joho6666s-projects.vercel.app",
     cleartext: true
   },
   android: {
