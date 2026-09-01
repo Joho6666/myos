@@ -121,3 +121,15 @@ body .main-shell { background: hsl(var(--background)); }
 .project-detail-actions { display: inline-flex; align-items: center; gap: 10px; }.sidebar-create { cursor: pointer; font: inherit; }
 .creation-task-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }.creation-fields .creation-checkbox { display: flex; grid-column: 1 / -1; align-items: center; gap: 8px; padding-top: 4px; color: hsl(var(--foreground)); font-size: 13px; }.creation-checkbox input { width: 16px; height: 16px; accent-color: hsl(var(--accent)); }
 @media (max-width: 760px) { .creation-overlay { display: block; background: rgb(30 53 78 / .28); padding: 0; }.creation-center { width: 100%; max-height: min(82vh, 720px); margin-top: max(18vh, 110px); border-radius: 22px 22px 0 0; padding: 18px 16px calc(22px + env(safe-area-inset-bottom)); }.creation-center::before { display: block; width: 42px; height: 4px; margin: -8px auto 15px; border-radius: 999px; background: hsl(var(--border)); content: ""; }.creation-fields { grid-template-columns: 1fr; }.creation-type-row button { min-width: 78px; }.creation-center > footer { position: sticky; bottom: -18px; background: hsl(var(--background)); padding: 12px 0 2px; }.creation-center > footer .primary-button { flex: 1; } }
+
+.execution-log {
+  max-height: 420px;
+  overflow: auto;
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  background: hsl(var(--surface));
+  color: hsl(var(--foreground));
+  font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  padding: 12px;
+  white-space: pre-wrap;
+}

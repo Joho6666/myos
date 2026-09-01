@@ -24,6 +24,9 @@ export function ProjectAgentWorkspace({ project, data }: ProjectAgentWorkspacePr
   const [techStack, setTechStack] = useState((project.techStack || []).join(", "));
   const [progressMode, setProgressMode] = useState(project.progressMode || "agent_work");
   const [manualProgress, setManualProgress] = useState(project.manualProgress ?? 0);
+  const [preferredAgent, setPreferredAgent] = useState(project.preferredAgent || "codex");
+  const [permissionProfile, setPermissionProfile] = useState(project.permissionProfile || "standard");
+  const [maxRuntimeMinutes, setMaxRuntimeMinutes] = useState(project.maxRuntimeMinutes ?? 30);
   const [agentId, setAgentId] = useState<KnownAgentId>("codex");
   const [role, setRole] = useState("主开发");
   const [workTitle, setWorkTitle] = useState("");
@@ -84,7 +87,12 @@ export function ProjectAgentWorkspace({ project, data }: ProjectAgentWorkspacePr
             <label>进度来源<select value={progressMode} onChange={(event) => setProgressMode(event.target.value as "manual" | "agent_work")}><option value="agent_work">Agent 工作项</option><option value="manual">手动维护</option></select></label>
             <label>手动进度<input type="number" min="0" max="100" value={manualProgress} onChange={(event) => setManualProgress(Number(event.target.value))} disabled={progressMode !== "manual"} /></label>
           </div>
-          <button className="text-button" type="button" disabled={busy === "updateProjectAgentProfile"} onClick={() => void run({ type: "updateProjectAgentProfile", payload: { projectId: project.id, summary, techStack: techStack.split(",").map((item) => item.trim()).filter(Boolean), progressMode, manualProgress } }, "项目上下文已保存。")}>
+          <div className="agent-config-row">
+            <label>首选 Agent<select value={preferredAgent} onChange={(event) => setPreferredAgent(event.target.value)}>{agentRegistry.map((agent) => <option value={agent.id} key={agent.id}>{agent.name}</option>)}</select></label>
+            <label>权限档位<select value={permissionProfile} onChange={(event) => setPermissionProfile(event.target.value as "safe" | "standard" | "advanced")}><option value="safe">Safe</option><option value="standard">Standard</option><option value="advanced">Advanced</option></select></label>
+            <label>最长运行（分钟）<input type="number" min="1" max="240" value={maxRuntimeMinutes} onChange={(event) => setMaxRuntimeMinutes(Number(event.target.value))} /></label>
+          </div>
+          <button className="text-button" type="button" disabled={busy === "updateProjectAgentProfile"} onClick={() => void run({ type: "updateProjectAgentProfile", payload: { projectId: project.id, summary, techStack: techStack.split(",").map((item) => item.trim()).filter(Boolean), progressMode, manualProgress, preferredAgent: preferredAgent as KnownAgentId, permissionProfile, maxRuntimeMinutes, autoRetry: 2, verification: { typecheck: ["pnpm", "typecheck"], lint: ["pnpm", "lint"], test: ["pnpm", "test"] } } }, "项目上下文已保存。")}>
             保存上下文
           </button>
         </section>

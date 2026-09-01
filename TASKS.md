@@ -201,5 +201,23 @@
 - [x] Register Codex, Claude Code, OpenCode, Hermes, and OpenClaw without launching executables.
 - [x] Show Python Agent Runtime status in the Capability Center.
 - [x] Document the optional sidecar and future fixed-executable desktop packaging boundary.
-- [ ] Add one reviewed allow-listed Agent execution adapter after its CLI contract is verified.
+- [x] Add one reviewed allow-listed Agent execution adapter after its CLI contract is verified.
 - [ ] Run the full web and desktop verification after the runtime integration.
+
+## Phase 19 - MyOS v0.2 Agent Execution
+
+- [x] Add a unified Python execution adapter (detect/validate/start/stop/status/logs).
+- [x] Implement Codex CLI argv execution with allowlisted cwd, timeout, cancel, PID, and crash recovery.
+- [x] Keep Claude Code / OpenCode / Hermes / OpenClaw as registered or unsupported.
+- [x] Add execution state machine, SSE events, Git snapshot/diff/safe rollback, verification, and approval gates.
+- [x] Add Execution Center UI and upgrade Agent Dispatch to start a real run.
+- [x] Add CI for web quality checks and Python runtime tests.
+- [ ] Complete a live Desktop demo with an authenticated Codex CLI before tagging v0.2.0.
+
+## Phase 20 - Android Offline Workspace
+
+- [x] Persist SQLite encryption passphrase and fail back to Preferences without rotating keys.
+- [x] Fix today list, completed-task state, effect cleanup, and sync retry backoff.
+- [x] Cache Agent execution status on-device as read-only; do not run Codex on the phone.
+- [x] Document the offline APK path without `server.url`.
+- [x] Build a Debug APK on a machine with Android SDK.

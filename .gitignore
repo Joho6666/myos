@@ -28,6 +28,7 @@ desktop/logs
 # Python Agent Runtime
 .venv
 python-agent/.venv
+python-agent/data
 __pycache__
 *.py[cod]
 .pytest_cache

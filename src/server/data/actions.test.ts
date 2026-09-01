@@ -78,6 +78,31 @@ describe("applyMyOSAction recurring tasks", () => {
   });
 });
 
+describe("agent execution records", () => {
+  it("stores an execution snapshot without dropping existing work items", () => {
+    const next = applyMyOSAction(seedData, {
+      type: "upsertAgentExecution",
+      payload: {
+        id: "exec-demo",
+        workItemId: "agent-work-1",
+        projectId: "project-myos",
+        projectName: "MyOS 私人工作台",
+        agentId: "codex",
+        title: "检查 TypeScript",
+        instructions: "修复错误并运行测试",
+        workingDirectory: "C:/demo/myos",
+        permissionProfile: "standard",
+        status: "running",
+        phase: "running",
+        latestAction: "codex exec started"
+      }
+    });
+    expect(next.agentExecutions[0]?.id).toBe("exec-demo");
+    expect(next.agentWorkItems).toHaveLength(seedData.agentWorkItems.length);
+    expect(next.activities[0]?.action).toBe("Agent 执行");
+  });
+});
+
 describe("applyMyOSAction", () => {
   it("creates a project and records activity", () => {
     const next = applyMyOSAction(seedData, {

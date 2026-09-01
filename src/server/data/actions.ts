@@ -83,6 +83,7 @@ export function applyMyOSAction(current: MyOSData, action: MyOSAction): MyOSData
         agentWorkItems: current.agentWorkItems.filter((item) => item.projectId !== project.id),
         agentReports: current.agentReports.filter((item) => item.projectId !== project.id),
         agentWorkEvents: current.agentWorkEvents.filter((item) => item.projectId !== project.id),
+        agentExecutions: current.agentExecutions.filter((item) => item.projectId !== project.id),
         activities: [logActivity("删除项目", project.name), ...current.activities]
       };
     }
@@ -91,7 +92,20 @@ export function applyMyOSAction(current: MyOSData, action: MyOSAction): MyOSData
       return {
         ...current,
         projects: current.projects.map((project) => project.id === action.payload.projectId
-          ? { ...project, summary: action.payload.summary, techStack: action.payload.techStack, progressMode: action.payload.progressMode, manualProgress: action.payload.manualProgress, updatedAt: "刚刚" }
+          ? {
+              ...project,
+              summary: action.payload.summary,
+              techStack: action.payload.techStack,
+              progressMode: action.payload.progressMode,
+              manualProgress: action.payload.manualProgress,
+              preferredAgent: action.payload.preferredAgent ?? project.preferredAgent,
+              fallbackAgent: action.payload.fallbackAgent ?? project.fallbackAgent,
+              permissionProfile: action.payload.permissionProfile ?? project.permissionProfile,
+              maxRuntimeMinutes: action.payload.maxRuntimeMinutes ?? project.maxRuntimeMinutes,
+              autoRetry: action.payload.autoRetry ?? project.autoRetry,
+              verification: action.payload.verification ?? project.verification,
+              updatedAt: "刚刚"
+            }
           : project),
         activities: [logActivity("更新项目 Agent 配置", action.payload.projectId), ...current.activities]
       };
@@ -179,6 +193,60 @@ export function applyMyOSAction(current: MyOSData, action: MyOSAction): MyOSData
           : current.agentWorkItems,
         agentWorkEvents: event ? [event, ...current.agentWorkEvents] : current.agentWorkEvents,
         activities: [logActivity("提交 Agent 汇报", action.payload.agentId), ...current.activities]
+      };
+    }
+    case "upsertAgentExecution": {
+      requireItem(current.projects.find((project) => project.id === action.payload.projectId), "项目");
+      const existing = current.agentExecutions.find((item) => item.id === action.payload.id);
+      const execution = {
+        id: action.payload.id,
+        workItemId: action.payload.workItemId,
+        projectId: action.payload.projectId,
+        projectName: action.payload.projectName,
+        agentId: action.payload.agentId,
+        title: action.payload.title,
+        instructions: action.payload.instructions,
+        workingDirectory: action.payload.workingDirectory,
+        permissionProfile: action.payload.permissionProfile,
+        status: action.payload.status,
+        phase: action.payload.phase,
+        createdAt: existing?.createdAt || "刚刚",
+        updatedAt: "刚刚",
+        error: action.payload.error,
+        latestAction: action.payload.latestAction,
+        retryCount: action.payload.retryCount ?? existing?.retryCount ?? 0,
+        maxRetries: existing?.maxRetries ?? 2,
+        verification: existing?.verification ?? [],
+        diff: {
+          filesChanged: action.payload.filesChanged ?? existing?.diff?.filesChanged ?? 0,
+          additions: action.payload.additions ?? existing?.diff?.additions ?? 0,
+          deletions: action.payload.deletions ?? existing?.diff?.deletions ?? 0,
+          files: existing?.diff?.files ?? [],
+          highRisk: existing?.diff?.highRisk ?? []
+        },
+        accepted: action.payload.accepted ?? existing?.accepted ?? null,
+        snapshot: existing?.snapshot,
+        report: existing?.report,
+        approval: existing?.approval
+      };
+      const eventType = action.payload.status === "waiting_for_approval" ? "approval" : action.payload.status === "failed" ? "failed" : action.payload.status === "completed" ? "completed" : "progress";
+      const event: AgentWorkEvent = {
+        id: randomUUID(),
+        projectId: action.payload.projectId,
+        workItemId: action.payload.workItemId,
+        agentId: action.payload.agentId,
+        eventType,
+        progress: action.payload.status === "completed" ? 100 : existing ? 40 : 10,
+        message: action.payload.latestAction || action.payload.error || `执行状态：${action.payload.status}`,
+        createdAt: "刚刚"
+      };
+      return {
+        ...current,
+        agentExecutions: existing
+          ? current.agentExecutions.map((item) => item.id === existing.id ? { ...item, ...execution } : item)
+          : [execution, ...current.agentExecutions],
+        agentWorkEvents: [event, ...current.agentWorkEvents],
+        activities: [logActivity("Agent 执行", `${action.payload.title} / ${action.payload.status}`), ...current.activities]
       };
     }
     case "toggleTask": {

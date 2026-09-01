@@ -1,9 +1,8 @@
 from typing import Any
 
 from .client import MyOSClient, latest_matching_work_item
+from .execution.engine import ExecutionEngine
 from .models import (
-    AgentId,
-    AgentRuntimeTarget,
     CreateJobRequest,
     HeartbeatRequest,
     JobResponse,
@@ -11,56 +10,18 @@ from .models import (
 )
 
 
-AGENT_TARGETS: tuple[AgentRuntimeTarget, ...] = (
-    AgentRuntimeTarget(
-        id="codex",
-        label="Codex CLI",
-        executionMode="manual",
-        detail="Registered target. Phase 1 records context and evidence; execution adapter is not enabled.",
-    ),
-    AgentRuntimeTarget(
-        id="claude-code",
-        label="Claude Code",
-        executionMode="manual",
-        detail="Registered target. Use the project brief and report progress through this runtime.",
-    ),
-    AgentRuntimeTarget(
-        id="opencode",
-        label="OpenCode",
-        executionMode="manual",
-        detail="Registered target. Execution remains allow-list based and disabled in Phase 1.",
-    ),
-    AgentRuntimeTarget(
-        id="copilot",
-        label="GitHub Copilot CLI",
-        executionMode="manual",
-        detail="Registered target. Authenticate locally with Copilot CLI; MyOS does not read or store its local credential.",
-    ),
-    AgentRuntimeTarget(
-        id="hermes",
-        label="Hermes",
-        executionMode="manual",
-        detail="Registered target. Execution adapter will be added only after its CLI contract is verified.",
-    ),
-    AgentRuntimeTarget(
-        id="openclaw",
-        label="OpenClaw",
-        executionMode="manual",
-        detail="Registered target. No local process is launched by the runtime.",
-    ),
-)
-
-
 class RuntimeService:
-    def __init__(self, client: MyOSClient):
+    def __init__(self, client: MyOSClient, engine: ExecutionEngine | None = None):
         self.client = client
+        self.engine = engine
 
     def runtime_info(self) -> dict[str, Any]:
+        agents = self.engine.runtime_agents() if self.engine else []
         return {
             "name": "MyOS Python Agent Runtime",
-            "version": "0.1.0",
-            "executionPolicy": "no-arbitrary-shell",
-            "agents": [target.model_dump(by_alias=True) for target in AGENT_TARGETS],
+            "version": "0.2.0-alpha",
+            "executionPolicy": "allowlisted-argv",
+            "agents": agents,
         }
 
     async def create_job(self, request: CreateJobRequest) -> JobResponse:
@@ -82,7 +43,7 @@ class RuntimeService:
             agentId=request.agent_id,
             status=item.get("status", "queued") if item else "queued",
             progress=int(item.get("progress", 0)) if item else 0,
-            message="Work item created in MyOS. Execution remains manual in Phase 1.",
+            message="Work item created in MyOS. Use /executions to start an allow-listed adapter.",
             executionMode="manual",
         )
 

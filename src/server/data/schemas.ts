@@ -42,7 +42,18 @@ export const myOSActionSchema = z.discriminatedUnion("type", [
       summary: longText,
       techStack: z.array(z.string().trim().min(1).max(80)).max(20),
       progressMode: z.enum(["manual", "agent_work"]),
-      manualProgress: z.number().min(0).max(100)
+      manualProgress: z.number().min(0).max(100),
+      preferredAgent: z.enum(["codex", "claude-code", "opencode", "copilot", "hermes", "openclaw"]).optional(),
+      fallbackAgent: z.enum(["codex", "claude-code", "opencode", "copilot", "hermes", "openclaw"]).optional(),
+      permissionProfile: z.enum(["safe", "standard", "advanced"]).optional(),
+      maxRuntimeMinutes: z.number().min(1).max(240).optional(),
+      autoRetry: z.number().min(0).max(3).optional(),
+      verification: z.object({
+        typecheck: z.array(z.string().trim().min(1).max(80)).max(8).optional(),
+        lint: z.array(z.string().trim().min(1).max(80)).max(8).optional(),
+        test: z.array(z.string().trim().min(1).max(80)).max(8).optional(),
+        build: z.array(z.string().trim().min(1).max(80)).max(8).optional()
+      }).optional()
     })
   }),
   z.object({
@@ -139,6 +150,29 @@ export const myOSActionSchema = z.discriminatedUnion("type", [
       changedFiles: z.array(z.string().trim().min(1).max(500)).max(100).optional(),
       testResult: longText.optional(),
       artifactUrl: optionalUrl
+    })
+  }),
+  z.object({
+    type: z.literal("upsertAgentExecution"),
+    payload: z.object({
+      id: requiredText,
+      workItemId: requiredText,
+      projectId: requiredText,
+      projectName: requiredText,
+      agentId: z.enum(["codex", "claude-code", "opencode", "copilot", "hermes", "openclaw"]),
+      title: requiredText,
+      instructions: longText,
+      workingDirectory: z.string().trim().max(1000),
+      permissionProfile: z.enum(["safe", "standard", "advanced"]),
+      status: z.enum(["queued", "preparing", "running", "waiting_for_approval", "verifying", "completed", "failed", "cancelled"]),
+      phase: requiredText,
+      error: longText.optional(),
+      latestAction: longText.optional(),
+      retryCount: z.number().min(0).max(10).optional(),
+      filesChanged: z.number().min(0).optional(),
+      additions: z.number().min(0).optional(),
+      deletions: z.number().min(0).optional(),
+      accepted: z.boolean().nullable().optional()
     })
   }),
   z.object({

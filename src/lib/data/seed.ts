@@ -14,7 +14,17 @@ export const seedData: MyOSData = {
       summary: "把项目、任务、外部工具和本地 Agent 汇聚为一个可持续使用的个人操作系统。",
       techStack: ["Next.js", "TypeScript", "Supabase", "Electron"],
       progressMode: "agent_work",
-      manualProgress: 42
+      manualProgress: 42,
+      preferredAgent: "codex",
+      fallbackAgent: "claude-code",
+      permissionProfile: "standard",
+      maxRuntimeMinutes: 30,
+      autoRetry: 2,
+      verification: {
+        typecheck: ["pnpm", "typecheck"],
+        lint: ["pnpm", "lint"],
+        test: ["pnpm", "test"]
+      }
     },
     {
       id: "project-car",
@@ -144,5 +154,6 @@ export const seedData: MyOSData = {
   agentWorkEvents: [
     { id: "agent-event-1", projectId: "project-myos", workItemId: "agent-work-2", agentId: "claude-code", eventType: "progress", progress: 60, message: "完成第一轮安全边界检查。", createdAt: "今天" },
     { id: "agent-event-2", projectId: "project-myos", workItemId: "agent-work-1", agentId: "codex", eventType: "completed", progress: 100, message: "Supabase 核心 CRUD 已完成。", createdAt: "今天" }
-  ]
+  ],
+  agentExecutions: []
 };

@@ -41,8 +41,8 @@ GOOGLE_CALENDAR_ID=primary
 GOOGLE_TASKS_LIST_ID=
 GOOGLE_DRIVE_FOLDER_ID=
 
-PYTHON_AGENT_BASE_URL=http://127.0.0.1:8765
-PYTHON_AGENT_TOKEN=
+PYTHON_AGENT_BASE_URL=http://127.0.0.1:43200
+MYOS_PYTHON_AGENT_TOKEN=
 `;
 
 function ensureDirs() {
@@ -79,6 +79,13 @@ function ensureEnvLocal() {
     .filter((key) => !new RegExp(`^\\s*${key}\\s*=`,"m").test(next));
   if (missingKeys.length > 0) {
     next = `${next.replace(/\s*$/, "")}\n# 升级补充的配置项，按需填写\n${missingKeys.map((key) => `${key}=`).join("\n")}\n`;
+  }
+
+  if (!/^\s*MYOS_PYTHON_AGENT_TOKEN\s*=\s*\S.*$/m.test(next)) {
+    const runtimeToken = crypto.randomBytes(32).toString("hex");
+    next = /^\s*MYOS_PYTHON_AGENT_TOKEN\s*=.*$/m.test(next)
+      ? next.replace(/^\s*MYOS_PYTHON_AGENT_TOKEN\s*=.*$/m, `MYOS_PYTHON_AGENT_TOKEN=${runtimeToken}`)
+      : `${next.replace(/\s*$/, "")}\nMYOS_PYTHON_AGENT_TOKEN=${runtimeToken}\n`;
   }
 
   if (next !== current) {

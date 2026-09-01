@@ -97,9 +97,17 @@ Agent CLI / MCP / future desktop adapter
   -> project context / work item / heartbeat / report / evidence
 ```
 
-The sidecar has no arbitrary shell endpoint. Its Phase 1 Agent registry is a
-controlled catalog with manual execution mode, so a registered Agent name is
-not treated as proof that a process is installed or running. A future adapter
-must define an executable allow-list, project scope, confirmation policy,
-timeouts, sanitized output, and tests before Electron or the service can launch
-it.
+v0.2.0-alpha adds an allow-listed execution adapter inside the sidecar:
+
+```text
+Dispatch / Execution Center
+  -> /api/executions (owner session, Zod)
+  -> Python Runtime POST /executions
+  -> PermissionGate + Git snapshot
+  -> CodexAdapter argv (`codex exec --cd <allowlisted-dir>`)
+  -> SSE logs / heartbeat / verification / report
+```
+
+Working directories come from `local-agent` `allowedProjects`. Commands use argv
+arrays only. Codex credentials stay in Codex's own CLI store. Unsupported Agent
+CLIs remain registered and are not launched.

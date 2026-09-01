@@ -19,6 +19,7 @@ const baseActions: MyOSActionDefinition[] = [
   { id: "upload-file", label: "上传文件", description: "进入文件中心保存资料", keywords: ["文件", "上传", "pdf", "word"], icon: "upload", href: "/app/files", type: "create", enabled: true, group: "capture" },
   { id: "open-ai", label: "打开 AI 工作台", description: "进入统一 AI 工作入口", keywords: ["ai", "模型", "chat"], icon: "bot", href: "/app/ai", type: "navigate", enabled: true, group: "work" },
   { id: "open-agents", label: "打开 Agent 控制中心", description: "查看项目执行、阻塞项和 Agent 汇报", keywords: ["agent", "codex", "claude", "执行", "汇报"], icon: "radar", href: "/app/agents", type: "navigate", enabled: true, group: "work" },
+  { id: "open-executions", label: "打开执行中心", description: "查看运行中的 Agent、审批、Diff 和验证结果", keywords: ["execution", "执行", "codex", "diff", "审批"], icon: "play", href: "/app/executions", type: "navigate", enabled: true, group: "work" },
   { id: "dispatch-agent-work", label: "派发 Agent 工作", description: "用模板将明确工作加入项目 Agent 队列", keywords: ["agent", "派发", "任务", "codex", "claude", "执行"], icon: "send", href: "/app/agents", type: "create", enabled: true, group: "work" },
   { id: "open-work-map", label: "打开工作地图", description: "查看项目工作树、执行分布和阻塞项", keywords: ["工作树", "图表", "看板", "进度", "work map"], icon: "git-branch", href: "/app/work-map", type: "navigate", enabled: true, group: "work" },
   { id: "open-capabilities", label: "打开能力中心", description: "查看 MCP、Skills 与 API 配置状态", keywords: ["mcp", "skill", "api", "能力", "工具"], icon: "wrench", href: "/app/capabilities", type: "navigate", enabled: true, group: "system" },

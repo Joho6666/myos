@@ -5,10 +5,11 @@ CLI, MCP, and future desktop adapters one small HTTP surface for reading a
 project brief, creating Agent work, sending heartbeats, and submitting
 progress reports.
 
-Phase 1 deliberately does not execute arbitrary shell commands or launch
-Codex, Claude Code, OpenCode, Hermes, or OpenClaw. Those names are registered
-as controlled Agent targets, while execution remains manual until each target
-has an explicit allow-listed adapter and confirmation flow.
+v0.2.0-alpha adds an allow-listed execution adapter. Codex CLI can be started
+with argv (`codex exec --cd <dir> --sandbox workspace-write`). Other Agent
+names remain registered; they are not launched until their CLI contract is
+verified. The runtime never uses `shell=True`, never reads Agent credentials,
+and refuses working directories outside `local-agent` `allowedProjects`.
 
 ## Start locally
 
@@ -47,6 +48,10 @@ Authorization: Bearer <MYOS_PYTHON_AGENT_TOKEN>
 - `POST /jobs` - create a MyOS Agent work item.
 - `POST /jobs/{work_item_id}/heartbeat` - append a progress heartbeat.
 - `POST /jobs/{work_item_id}/report` - append a structured Agent report.
+- `GET /executions` - list allow-listed executions.
+- `POST /executions` - start Codex (or reject unsupported agents).
+- `GET /executions/{id}` / `logs` / `events` - status, logs, SSE.
+- `POST /executions/{id}/stop|approve|accept|rollback` - control the run.
 
 Example job request:
 

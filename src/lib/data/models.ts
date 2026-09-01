@@ -16,6 +16,62 @@ export type Project = {
   techStack?: string[];
   progressMode?: "manual" | "agent_work";
   manualProgress?: number;
+  preferredAgent?: string;
+  fallbackAgent?: string;
+  permissionProfile?: PermissionProfile;
+  maxRuntimeMinutes?: number;
+  autoRetry?: number;
+  verification?: ProjectVerification;
+};
+
+export type PermissionProfile = "safe" | "standard" | "advanced";
+
+export type ProjectVerification = {
+  typecheck?: string[];
+  lint?: string[];
+  test?: string[];
+  build?: string[];
+};
+
+export type ExecutionStatus =
+  | "queued"
+  | "preparing"
+  | "running"
+  | "waiting_for_approval"
+  | "verifying"
+  | "completed"
+  | "failed"
+  | "cancelled";
+
+export type AgentExecution = {
+  id: string;
+  workItemId: string;
+  projectId: string;
+  projectName: string;
+  agentId: string;
+  title: string;
+  instructions: string;
+  workingDirectory: string;
+  permissionProfile: PermissionProfile;
+  status: ExecutionStatus;
+  phase: string;
+  createdAt: string;
+  updatedAt: string;
+  startedAt?: string;
+  finishedAt?: string;
+  pid?: number;
+  exitCode?: number | null;
+  error?: string;
+  currentFile?: string;
+  latestAction?: string;
+  retryCount: number;
+  maxRetries: number;
+  snapshot?: { head?: string | null; dirty: boolean; status: string; files: string[] };
+  diff?: { filesChanged: number; additions: number; deletions: number; files: string[]; patch?: string; highRisk: string[] };
+  verification: Array<{ name: string; command: string[]; ok: boolean; exitCode?: number | null; output?: string }>;
+  report?: Record<string, unknown>;
+  approval?: { reason?: string; risks?: string[]; decision?: string | null };
+  accepted?: boolean | null;
 };
 
 export type ProjectMilestone = {
@@ -86,7 +142,7 @@ export type AgentWorkEvent = {
   projectId: string;
   workItemId: string;
   agentId: string;
-  eventType: "queued" | "started" | "heartbeat" | "progress" | "blocked" | "completed" | "failed" | "report";
+  eventType: "queued" | "started" | "heartbeat" | "progress" | "blocked" | "completed" | "failed" | "report" | "log" | "approval" | "verify" | "rollback";
   progress: number;
   message: string;
   createdAt: string;
@@ -324,4 +380,5 @@ export type MyOSData = {
   agentWorkItems: AgentWorkItem[];
   agentReports: AgentReport[];
   agentWorkEvents: AgentWorkEvent[];
+  agentExecutions: AgentExecution[];
 };

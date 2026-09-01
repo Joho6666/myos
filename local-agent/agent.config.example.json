@@ -5,8 +5,15 @@
     {
       "id": "myos",
       "name": "MyOS",
-      "path": "C:/Users/JOHO/Documents/Codex/2026-07-24/spreadsheets-plugin-spreadsheets-openai-primary-runtime",
+      "path": "C:/path/to/your/project",
       "vscode": true
+    }
+  ],
+  "allowedFileRoots": [
+    {
+      "id": "documents",
+      "name": "我的资料",
+      "path": "C:/path/to/your/documents"
     }
   ],
   "allowedScripts": [],

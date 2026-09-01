@@ -1,7 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 import { seedData } from "@/lib/data/seed";
-import type { Activity, AgentAssignment, AgentReport, AgentWorkItem, AutomationRun, DailyCheckin, DailyReview, FileRecord, Goal, Habit, HabitLog, InboxItem, LifeArea, MyOSData, Note, PrivacyLevel, Project, Prompt, Routine, RoutineLog, RoutineStep, Task, WeeklyReview } from "@/lib/data/models";
+import type { Activity, AgentAssignment, AgentExecution, AgentReport, AgentWorkItem, AutomationRun, DailyCheckin, DailyReview, FileRecord, Goal, Habit, HabitLog, InboxItem, LifeArea, MyOSData, Note, PrivacyLevel, Project, Prompt, Routine, RoutineLog, RoutineStep, Task, WeeklyReview } from "@/lib/data/models";
 import { dateOnly, nextOccurrenceDate, todayAlias } from "./date-utils";
 import type { MyOSSession } from "@/lib/auth/session";
 import type { MyOSAction } from "./schemas";
@@ -125,7 +125,13 @@ function mapProject(row: Row): Project {
     summary: text(row.agent_summary) || undefined,
     techStack: Array.isArray(row.tech_stack) ? row.tech_stack.map(String) : [],
     progressMode: text(row.agent_progress_mode, "agent_work") as Project["progressMode"],
-    manualProgress: Number(row.agent_manual_progress ?? 0)
+    manualProgress: Number(row.agent_manual_progress ?? 0),
+    preferredAgent: text(row.preferred_agent) || undefined,
+    fallbackAgent: text(row.fallback_agent) || undefined,
+    permissionProfile: (text(row.permission_profile, "standard") as Project["permissionProfile"]),
+    maxRuntimeMinutes: Number(row.max_runtime_minutes ?? 30),
+    autoRetry: Number(row.auto_retry ?? 2),
+    verification: row.verification && typeof row.verification === "object" ? row.verification as Project["verification"] : undefined
   };
 }
 
@@ -162,6 +168,31 @@ function mapAgentWorkItem(row: Row): AgentWorkItem {
 
 function mapAgentReport(row: Row): AgentReport {
   return { id: text(row.id), projectId: text(row.project_id), workItemId: text(row.work_item_id) || undefined, agentId: text(row.agent_id), summary: text(row.summary), progress: Number(row.progress ?? 0), createdAt: dateLabel(row.created_at), blockedReason: text(row.blocked_reason) || undefined, changedFiles: Array.isArray(row.changed_files) ? row.changed_files.map(String) : [], testResult: text(row.test_result) || undefined, artifactUrl: text(row.artifact_url) || undefined };
+}
+
+function mapAgentExecution(row: Row): AgentExecution {
+  return {
+    id: text(row.id),
+    workItemId: text(row.work_item_id),
+    projectId: text(row.project_id),
+    projectName: text(row.project_name),
+    agentId: text(row.agent_id),
+    title: text(row.title),
+    instructions: text(row.instructions),
+    workingDirectory: text(row.working_directory),
+    permissionProfile: text(row.permission_profile, "standard") as AgentExecution["permissionProfile"],
+    status: text(row.status, "queued") as AgentExecution["status"],
+    phase: text(row.phase, "queued"),
+    createdAt: dateLabel(row.created_at),
+    updatedAt: dateLabel(row.updated_at),
+    error: text(row.error) || undefined,
+    latestAction: text(row.latest_action) || undefined,
+    retryCount: Number(row.retry_count ?? 0),
+    maxRetries: 2,
+    verification: [],
+    diff: { filesChanged: Number(row.files_changed ?? 0), additions: Number(row.additions ?? 0), deletions: Number(row.deletions ?? 0), files: [], highRisk: [] },
+    accepted: row.accepted === null || row.accepted === undefined ? null : bool(row.accepted)
+  };
 }
 
 function mapAgentWorkEvent(row: Row): AgentWorkEvent {
@@ -604,7 +635,8 @@ async function seedIfEmpty(client: SupabaseClient, userId: string) {
       id: agentWorkEventIdMap.get(event.id) ?? event.id,
       projectId: projectIdMap.get(event.projectId) ?? event.projectId,
       workItemId: agentWorkItemIdMap.get(event.workItemId) ?? event.workItemId
-    }))
+    })),
+    agentExecutions: []
   });
 
   await requireOk(
@@ -642,7 +674,8 @@ async function readSupabaseData(client: SupabaseClient, userId: string): Promise
     agentAssignments,
     agentWorkItems,
     agentReports,
-    agentWorkEvents
+    agentWorkEvents,
+    agentExecutions
   ] = await Promise.all([
     readRows(client, userId, "projects"),
     readRows(client, userId, "project_milestones"),
@@ -667,7 +700,8 @@ async function readSupabaseData(client: SupabaseClient, userId: string): Promise
     readRows(client, userId, "project_agent_assignments", "created_at"),
     readRows(client, userId, "agent_work_items"),
     readRows(client, userId, "agent_reports", "created_at"),
-    readRows(client, userId, "agent_work_events", "created_at")
+    readRows(client, userId, "agent_work_events", "created_at"),
+    readRows(client, userId, "agent_executions")
   ]);
 
   return {
@@ -694,13 +728,15 @@ async function readSupabaseData(client: SupabaseClient, userId: string): Promise
     agentAssignments: (agentAssignments as Row[]).map(mapAgentAssignment),
     agentWorkItems: (agentWorkItems as Row[]).map(mapAgentWorkItem),
     agentReports: (agentReports as Row[]).map(mapAgentReport),
-    agentWorkEvents: (agentWorkEvents as Row[]).map(mapAgentWorkEvent)
+    agentWorkEvents: (agentWorkEvents as Row[]).map(mapAgentWorkEvent),
+    agentExecutions: (agentExecutions as Row[]).map(mapAgentExecution)
   };
 }
 
 async function deleteUserRows(client: SupabaseClient, userId: string) {
   const tables = [
     "agent_work_events",
+    "agent_executions",
     "agent_reports",
     "agent_work_items",
     "project_risks",
@@ -1485,6 +1521,34 @@ export async function applyMyOSActionToSupabase(session: MyOSSession, action: My
         await insertActivity(client, userId, "提交 Agent 汇报", `${text(project.name, "项目")} / ${action.payload.agentId}`);
         break;
       }
+    case "upsertAgentExecution":
+      await requireOk(
+        client.from("agent_executions").upsert({
+          id: action.payload.id,
+          user_id: userId,
+          work_item_id: action.payload.workItemId,
+          project_id: action.payload.projectId,
+          project_name: action.payload.projectName,
+          agent_id: action.payload.agentId,
+          title: action.payload.title,
+          instructions: action.payload.instructions,
+          working_directory: action.payload.workingDirectory,
+          permission_profile: action.payload.permissionProfile,
+          status: action.payload.status,
+          phase: action.payload.phase,
+          error: action.payload.error || null,
+          latest_action: action.payload.latestAction || null,
+          retry_count: action.payload.retryCount ?? 0,
+          files_changed: action.payload.filesChanged ?? 0,
+          additions: action.payload.additions ?? 0,
+          deletions: action.payload.deletions ?? 0,
+          accepted: action.payload.accepted ?? null,
+          updated_at: new Date().toISOString()
+        }),
+        "保存 Agent 执行"
+      );
+      await insertActivity(client, userId, "Agent 执行", `${action.payload.title} / ${action.payload.status}`);
+      break;
     case "toggleTask": {
       const task = await requireOk(
         client.from("project_tasks").select("status, recurrence_rule, planned_date, title, priority, project_name, due_text, goal_id").eq("user_id", userId).eq("id", action.payload.id).single(),

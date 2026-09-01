@@ -41,7 +41,7 @@ Implement reviewed encrypted vault storage for `vault` privacy-level data.
 ## Phase 8
 
 Add the optional Python Agent Runtime for local project context, work-item
-creation, heartbeats, and evidence reports. The next step is one verified
-allow-listed execution adapter at a time, starting with a single Agent CLI;
-desktop bundling should use a fixed Python executable rather than requiring a
-system Python installation.
+creation, heartbeats, evidence reports, and the first Codex execution adapter.
+The next step is a live Desktop demo with authenticated Codex, then one more
+verified CLI adapter at a time. Desktop bundling should later use a fixed
+Python executable rather than requiring a system Python installation.

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 import os
 
 
@@ -28,6 +29,8 @@ class RuntimeConfig:
     host: str = "127.0.0.1"
     port: int = 43200
     request_timeout: float = 15.0
+    allowlist_path: str = ""
+    data_dir: str = ""
 
     def __post_init__(self) -> None:
         if self.host not in {"127.0.0.1", "localhost", "::1"}:
@@ -46,7 +49,20 @@ class RuntimeConfig:
             host=_loopback_host(),
             port=_port(),
             request_timeout=float(_env("PYTHON_AGENT_REQUEST_TIMEOUT", "15")),
+            allowlist_path=_env("MYOS_AGENT_CONFIG"),
+            data_dir=_env("PYTHON_AGENT_DATA_DIR"),
         )
+
+    def resolved_allowlist_path(self) -> Path | None:
+        if self.allowlist_path:
+            return Path(self.allowlist_path)
+        default = Path(__file__).resolve().parents[2] / "local-agent" / "agent.config.json"
+        return default if default.is_file() else None
+
+    def resolved_data_dir(self) -> Path:
+        if self.data_dir:
+            return Path(self.data_dir)
+        return Path(__file__).resolve().parents[1] / "data" / "executions"
 
     @property
     def myos_configured(self) -> bool:

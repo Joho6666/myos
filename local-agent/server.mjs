@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, writeFile, readdir, realpath, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,9 +20,38 @@ async function readConfig() {
     port: Number(config.port || 43110),
     authToken: String(config.authToken || ""),
       allowedProjects: Array.isArray(config.allowedProjects) ? config.allowedProjects : [],
+      allowedFileRoots: Array.isArray(config.allowedFileRoots) ? config.allowedFileRoots : [],
       allowedScripts: Array.isArray(config.allowedScripts) ? config.allowedScripts : [],
     ollamaBaseUrl: String(config.ollamaBaseUrl || "http://127.0.0.1:11434"),
     myosUrl: String(config.myosUrl || "http://127.0.0.1:3002")
+  };
+}
+
+function publicFileRoots(roots) {
+  return roots.map((root) => ({ id: String(root.id || ""), name: String(root.name || root.id || ""), path: String(root.path || "") }))
+    .filter((root) => root.id && root.path);
+}
+
+async function resolveAllowedFile(rootId, requestedPath = "") {
+  const root = publicFileRoots(config.allowedFileRoots).find((item) => item.id === rootId);
+  if (!root) throw new Error("文件目录不在允许列表中。");
+  const rootPath = await realpath(root.path);
+  const candidate = await realpath(path.resolve(rootPath, requestedPath || "."));
+  if (candidate !== rootPath && !candidate.startsWith(`${rootPath}${path.sep}`)) throw new Error("拒绝访问授权目录以外的文件。");
+  return { root, path: candidate };
+}
+
+async function listFiles(rootId, requestedPath) {
+  const target = await resolveAllowedFile(rootId, requestedPath);
+  const entries = await readdir(target.path, { withFileTypes: true });
+  return {
+    root: { id: target.root.id, name: target.root.name },
+    path: path.relative(await realpath(target.root.path), target.path).replaceAll("\\", "/"),
+    entries: await Promise.all(entries.slice(0, 500).map(async (entry) => {
+      const entryPath = path.join(target.path, entry.name);
+      const info = await stat(entryPath);
+      return { name: entry.name, path: path.relative(await realpath(target.root.path), entryPath).replaceAll("\\", "/"), kind: entry.isDirectory() ? "directory" : "file", size: info.size, modifiedAt: info.mtime.toISOString() };
+    }))
   };
 }
 
@@ -202,6 +231,25 @@ const server = createServer(async (request, response) => {
 
     if (request.method === "GET" && url.pathname === "/projects") {
       sendJson(response, 200, { projects: publicProjects(config.allowedProjects) });
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/files/roots") {
+      sendJson(response, 200, { roots: publicFileRoots(config.allowedFileRoots).map(({ id, name }) => ({ id, name })) });
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/files/list") {
+      sendJson(response, 200, await listFiles(url.searchParams.get("root") || "", url.searchParams.get("path") || ""));
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/files/read") {
+      const target = await resolveAllowedFile(url.searchParams.get("root") || "", url.searchParams.get("path") || "");
+      const info = await stat(target.path);
+      if (!info.isFile() || info.size > 25 * 1024 * 1024) throw new Error("只能下载授权目录中的文件，且单次不超过 25MB。");
+      response.writeHead(200, { "content-type": "application/octet-stream", "content-length": info.size, "content-disposition": `attachment; filename*=UTF-8''${encodeURIComponent(path.basename(target.path))}`, "cache-control": "no-store" });
+      response.end(await readFile(target.path));
       return;
     }
 

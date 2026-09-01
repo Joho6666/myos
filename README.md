@@ -81,8 +81,8 @@ corepack pnpm desktop:build
 
 产物在 `dist/`：
 
-- `MyOS-Setup-0.1.2.exe` —— NSIS 安装程序
-- `MyOS-0.1.2-portable.exe` —— 便携版
+- `MyOS-Setup-0.2.0-alpha.exe` —— NSIS 安装程序（当前开发线；正式 v0.2.0 需等 Codex 执行闭环验证）
+- `MyOS-0.2.0-alpha-portable.exe` —— 便携版
 - `win-unpacked/` —— 免解压目录版
 
 开发态调试（不打包）：
@@ -158,7 +158,7 @@ corepack pnpm desktop:dev
 - Connection dashboard for GitHub, Gmail, Notion, Supabase, AI, and n8n
 - Gmail message intake into Inbox and Gmail attachment intake into File Center
 - Read-only Windows local-agent status page for local helper, Ollama, and allowlisted projects
-- Optional Python Agent Runtime for project context, Agent work items, heartbeats, and evidence reports
+- Optional Python Agent Runtime for project context, Agent work items, Codex CLI execution, heartbeats, and evidence reports
 - Supabase migration with RLS policies
 
 ## Known Limits
@@ -173,8 +173,8 @@ corepack pnpm desktop:dev
 - Gmail summary and attachment import require Google OAuth variables. Attachment import saves files through the same protected local/Supabase Storage pipeline as ordinary uploads.
 - Encrypted vault storage is planned but not implemented.
 - Offline mode currently provides an offline page and local quick-draft helper; full service worker caching is a later step.
-- The Python Agent Runtime is an optional local sidecar. Phase 1 records Agent work and evidence but does not launch arbitrary local commands or Agent executables.
-- Codex CLI and GitHub Copilot CLI are registered local Agent targets. Their machine credentials stay in their own CLI authentication stores; a verified allow-listed execution adapter is still required before MyOS launches either CLI.
+- The Python Agent Runtime is an optional local sidecar. v0.2.0-alpha can start Codex CLI through an allow-listed argv adapter. Other Agent CLIs stay registered or unsupported until their contracts are verified.
+- Codex credentials stay in Codex's own CLI store. MyOS never reads or copies them. Working directories must be in `local-agent` `allowedProjects`.
 
 ## Checks
 
@@ -183,6 +183,8 @@ pnpm typecheck
 pnpm lint
 pnpm test
 pnpm build
+pnpm python-agent:test
+pnpm secrets:scan
 ```
 
 ## Deployment

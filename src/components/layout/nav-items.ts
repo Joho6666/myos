@@ -22,6 +22,7 @@ import {
   MonitorCog,
   Radar,
   GitBranch,
+  Play,
   Wrench,
   LayoutDashboard,
   Sparkles,
@@ -53,6 +54,7 @@ export const navItems = [
   { href: "/app/activity", label: "活动", icon: Brain },
   { href: "/app/settings", label: "设置", icon: Settings },
   { href: "/app/agents", label: "Agent 控制", icon: Radar },
+  { href: "/app/executions", label: "执行中心", icon: Play },
   { href: "/app/work-map", label: "工作地图", icon: GitBranch },
   { href: "/app/capabilities", label: "能力中心", icon: Wrench }
 ];
@@ -62,7 +64,7 @@ export const primaryNavItems = [navItems[0], navItems[1], navItems[2], navItems[
 export const navGroups = [
   { label: "执行", description: "每天最常用的入口", icon: LayoutDashboard, items: primaryNavItems },
   { label: "工作资料", description: "项目、资料与知识沉淀", icon: Layers3, items: [navItems[8], navItems[9], navItems[10], navItems[11], navItems[17]] },
-  { label: "自动化与连接", description: "工具、Agent 和外部服务", icon: Sparkles, items: [navItems[12], navItems[13], navItems[18], navItems[19], navItems[22], navItems[23], navItems[24]] },
+  { label: "自动化与连接", description: "工具、Agent 和外部服务", icon: Sparkles, items: [navItems[12], navItems[13], navItems[18], navItems[19], navItems[22], navItems[23], navItems[24], navItems[25]] },
   { label: "生活", description: "长期目标和个人节奏", icon: BookOpen, items: [navItems[3], navItems[4], navItems[5], navItems[6], navItems[14]] },
   { label: "系统", description: "专业模块和系统管理", icon: SlidersHorizontal, items: [navItems[15], navItems[16], navItems[20], navItems[21]] }
 ];

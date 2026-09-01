@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getPythonAgentStatus } from "./client";
+import { chooseAgent, getPythonAgentStatus } from "./client";
 
 describe("getPythonAgentStatus", () => {
   afterEach(() => {
@@ -35,5 +35,15 @@ describe("getPythonAgentStatus", () => {
     expect(result.agents[0]?.id).toBe("codex");
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[1]?.[1]).toMatchObject({ headers: { authorization: "Bearer runtime-token", accept: "application/json" } });
+  });
+
+  it("routes auto selection to an available adapter", () => {
+    const agents = [
+      { id: "claude-code", label: "Claude Code", registered: true, available: false, executionMode: "manual" as const, detail: "unsupported" },
+      { id: "codex", label: "Codex", registered: true, available: true, executionMode: "adapter" as const, detail: "ready" }
+    ];
+    expect(chooseAgent({ requested: "auto", preferred: "claude-code", fallback: "codex", agents }).agentId).toBe("codex");
+    expect(chooseAgent({ requested: "codex", agents }).available).toBe(true);
+    expect(chooseAgent({ requested: "hermes", agents: [] }).available).toBe(false);
   });
 });

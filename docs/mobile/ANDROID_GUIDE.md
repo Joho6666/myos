@@ -1,44 +1,51 @@
 # Android 客户端打包与安装指南
 
-MyOS 提供了两种在 Android 手机上使用的最佳实践：
+MyOS 手机端是 **离线优先的 Capacitor 应用**（`apps/mobile`），不是把完整 Next.js Dashboard 塞进 WebView。
 
----
+生产 APK **不要**设置 `capacitor.config.ts` 的 `server.url`。一旦设置，应用会变成依赖网络的远程网页，断网无法启动。
 
-## 方式一：Capacitor 打包原生 APK（离线独立安装包）
+## 离线 APK（推荐）
 
-### 1. 前置环境
-- 本地需要安装 JDK 17+ 与 Android Studio（或配置好 Android SDK / Platform Tools）。
+1. 安装 JDK 17+ 与 Android Studio / SDK。
+2. 复制 `apps/mobile/.env.example` 为 `apps/mobile/.env.production`，只填：
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_PUBLISHABLE_KEY`（anon / publishable，**不要**填 service role）
+   - `VITE_MYOS_SYNC_URL`（已部署的 MyOS https 地址）
+3. 构建并同步：
 
-### 2. 配置服务器地址
-打开项目根目录的 `capacitor.config.ts`：
-```ts
-server: {
-  // 替换为你的实际云端线上部署地址或局域网地址
-  url: "https://your-myos-domain.com",
-  cleartext: true
-}
+```bash
+pnpm android:offline
 ```
 
-### 3. 同步并生成 APK
-在终端执行以下命令：
+4. 用 Android Studio 打开工程，或命令行打 Debug APK：
+
 ```bash
-# 1. 同步配置与 Web 资源到 Android 工程
-pnpm android:sync
-
-# 2. 直接在 Android Studio 中打开工程进行编译和真机调试
 pnpm android:open
-
-# 或者通过命令行直接打包 Debug APK：
+# 或
 pnpm android:build
 ```
-生成的 APK 位于：`android/app/build/outputs/apk/debug/app-debug.apk`。
 
----
+APK 位于 `android/app/build/outputs/apk/debug/app-debug.apk`。
 
-## 方式二：PWA WebAPK 免编译安装（推荐，几秒搞定）
+## 离线能力
 
-项目已经配置好了完整的 PWA Manifest 与高清矢量图标：
+断网可以：
 
-1. 使用手机上的 **Chrome** 或 **Edge** 浏览器打开你的 MyOS 线上地址（例如 `https://your-myos-domain.com`）。
-2. 点击浏览器右上角菜单（三个点） -> **「安装应用」** 或 **「添加到主屏幕」**。
-3. 系统会自动将其打包为一个轻量的独立应用，拥有独立桌面图标和无边框全屏体验。
+- 启动应用
+- 记录今天的任务、收件箱和项目
+- 数据保存在本机（优先加密 SQLite，失败则 Preferences）
+- 查看上次缓存的 Agent 执行状态（只读）
+
+联网且 Magic Link 登录后：
+
+- 队列自动同步到 `/api/myos/sync`
+- 刷新执行缓存
+
+不能：
+
+- 在手机上启动 Codex / Python Agent Runtime
+- 在没有桌面 Runtime 时批准执行
+
+## PWA 备选
+
+主站 MyOS 有 manifest，可用 Chrome「添加到主屏幕」。这 **不是** 离线工作区：没有完整 Service Worker，断网后网页版几乎不可用。要离线记事请用上面的 APK。

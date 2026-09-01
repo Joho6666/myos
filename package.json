@@ -1,6 +1,6 @@
 {
   "name": "myos",
-  "version": "0.1.7",
+  "version": "0.2.0-alpha",
   "private": true,
   "description": "MyOS - 私人数字操作系统",
   "author": "MyOS",
@@ -21,17 +21,23 @@
     "agent:mcp": "node tools/myos-agent-mcp.mjs",
     "python-agent:dev": "python python-agent/server.py",
     "python-agent:test": "python -m unittest discover -s python-agent/tests -p \"test_*.py\"",
+    "secrets:scan": "node scripts/scan-secrets.mjs",
     "desktop:icon": "node desktop/scripts/make-icon.mjs",
     "desktop:prepare": "node desktop/scripts/build-app.mjs",
     "desktop:dev": "node desktop/scripts/make-icon.mjs && node desktop/scripts/build-app.mjs && electron desktop/electron/main.js",
     "desktop:start": "electron desktop/electron/main.js",
     "desktop:build": "node desktop/scripts/make-icon.mjs && node desktop/scripts/build-app.mjs && electron-builder --win",
     "android:sync": "cap sync android",
+    "mobile:build": "pnpm --dir apps/mobile build",
+    "android:offline": "pnpm mobile:build && cap sync android",
     "android:open": "cap open android",
     "android:build": "cap sync android && cd android && gradlew assembleDebug"
   },
   "dependencies": {
+    "@capacitor-community/sqlite": "^8.1.1",
+    "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8.5.0",
+    "@capacitor/preferences": "^8.0.1",
     "@hookform/resolvers": "^5.2.1",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.52.1",
@@ -63,6 +69,7 @@
     "sharp": "^0.35.3",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
+    "vite": "^7.3.6",
     "vitest": "^3.2.4"
   }
 }

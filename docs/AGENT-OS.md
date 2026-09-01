@@ -101,10 +101,16 @@ It is the first Python-based runtime layer for Agent orchestration:
 - stores structured reports, changed-file claims, test notes, and artifact links;
 - exposes registered targets for Codex, Claude Code, OpenCode, Hermes, and OpenClaw.
 
-The runtime is deliberately not an arbitrary command runner. In Phase 1 every
-target reports `executionMode: manual`; no local executable is launched by the
-Python service. This keeps the project context and evidence path useful before
-we verify an individual Agent CLI and add an explicit allow-list adapter.
+v0.2.0-alpha adds a unified execution adapter. Codex is the first executable
+target: `codex exec --cd <allowlisted-dir> --sandbox workspace-write
+--ask-for-approval never`. MyOS does not read Codex credentials. Claude Code,
+OpenCode, Hermes, and OpenClaw stay `registered / unsupported` until their
+non-interactive CLI contracts are verified.
+
+Execution states: `QUEUED`, `PREPARING`, `RUNNING`, `WAITING_FOR_APPROVAL`,
+`VERIFYING`, `COMPLETED`, `FAILED`, `CANCELLED`. High-risk prompts or diffs
+pause for approval. Git snapshots are taken before the run; rollback applies
+the reverse patch and refuses to destroy the user's pre-existing dirty files.
 
 Start it locally with:
 

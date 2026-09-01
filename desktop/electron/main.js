@@ -201,6 +201,7 @@ async function startServices() {
     await mainWindow.loadURL(`http://127.0.0.1:${port}/app`);
   }
   notify.notifyReady(port);
+  startExecutionWatch();
 }
 
 function logError(label, error) {
@@ -213,6 +214,53 @@ function logError(label, error) {
   } catch {
     // 日志写入失败不应影响主流程
   }
+}
+
+let executionWatchTimer = null;
+const seenExecutions = new Map();
+
+function startExecutionWatch() {
+  if (executionWatchTimer) clearInterval(executionWatchTimer);
+  executionWatchTimer = setInterval(() => {
+    const env = bootstrap.readEnvLocal();
+    const token = env.MYOS_PYTHON_AGENT_TOKEN;
+    if (!token) {
+      trayModule.setTooltip("MyOS");
+      return;
+    }
+    const request = http.get(
+      { host: "127.0.0.1", port: 43200, path: "/executions", headers: { authorization: `Bearer ${token}` }, timeout: 2500 },
+      (response) => {
+        let raw = "";
+        response.on("data", (chunk) => { raw += chunk; });
+        response.on("end", () => {
+          try {
+            const body = JSON.parse(raw);
+            const executions = Array.isArray(body.executions) ? body.executions : [];
+            const running = executions.filter((item) => ["RUNNING", "PREPARING", "VERIFYING", "QUEUED"].includes(String(item.status || "").toUpperCase()));
+            trayModule.setTooltip(`MyOS · Running Agents: ${running.length}`);
+            for (const item of executions) {
+              const status = String(item.status || "").toUpperCase();
+              const previous = seenExecutions.get(item.id);
+              seenExecutions.set(item.id, status);
+              if (previous && previous !== status && (status === "COMPLETED" || status === "FAILED")) {
+                notify.notifyExecution("MyOS", `${item.agentId || "Agent"} ${status === "COMPLETED" ? "已完成" : "失败"}：${item.title || "执行任务"}`, () => {
+                  showWindow();
+                  if (mainWindow && activePort && item.id) {
+                    mainWindow.loadURL(`http://127.0.0.1:${activePort}/app/executions/${item.id}`);
+                  }
+                });
+              }
+            }
+          } catch {
+            trayModule.setTooltip("MyOS");
+          }
+        });
+      }
+    );
+    request.on("error", () => trayModule.setTooltip("MyOS"));
+    request.on("timeout", () => request.destroy());
+  }, 8000);
 }
 
 function registerIpc() {

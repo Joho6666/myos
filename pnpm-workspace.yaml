@@ -4,6 +4,9 @@
 # 平铺目录，Next 直接复制文件即可。
 nodeLinker: hoisted
 
+packages:
+  - apps/*
+
 allowBuilds:
   # NSIS 打包不需要 Squirrel installer，禁用它的构建脚本
   electron-winstaller: false

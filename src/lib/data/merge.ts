@@ -28,6 +28,7 @@ export function mergeData(input: Partial<MyOSData>): MyOSData {
     agentAssignments: input.agentAssignments ?? seedData.agentAssignments,
     agentWorkItems: input.agentWorkItems ?? seedData.agentWorkItems,
     agentReports: input.agentReports ?? seedData.agentReports,
-    agentWorkEvents: input.agentWorkEvents ?? seedData.agentWorkEvents
+    agentWorkEvents: input.agentWorkEvents ?? seedData.agentWorkEvents,
+    agentExecutions: input.agentExecutions ?? seedData.agentExecutions
   };
 }

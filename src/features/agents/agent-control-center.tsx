@@ -16,9 +16,11 @@ function projectProgress(projectId: string, manualProgress: number, workItems: R
 export function AgentControlCenter() {
   const { data } = useMyOSData();
   const [projectId, setProjectId] = useState("");
-  const [agentId, setAgentId] = useState("codex");
+  const [agentId, setAgentId] = useState("auto");
   const [title, setTitle] = useState("");
   const [instructions, setInstructions] = useState("");
+  const [permissionProfile, setPermissionProfile] = useState<"safe" | "standard" | "advanced">("standard");
+  const [confirming, setConfirming] = useState(false);
   const [message, setMessage] = useState("");
   const [dispatchError, setDispatchError] = useState("");
   const [dispatching, setDispatching] = useState(false);
@@ -40,27 +42,48 @@ export function AgentControlCenter() {
     setDispatchError("");
   }
 
+  const selectedProject = dispatchProjects.find((project) => project.id === projectId);
+
   async function dispatch() {
     if (!projectId || !title.trim() || !instructions.trim()) return;
+    if (!confirming) {
+      setConfirming(true);
+      setMessage("");
+      setDispatchError("");
+      return;
+    }
     setMessage("");
     setDispatchError("");
     setDispatching(true);
     try {
+      const response = await fetch("/api/executions", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          projectId,
+          agentId,
+          title: title.trim(),
+          instructions: instructions.trim(),
+          permissionProfile
+        })
+      });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.error || "启动执行失败。");
+      if (body?.execution?.id) {
+        window.location.href = `/app/executions/${body.execution.id}`;
+        return;
+      }
       const next = await postMyOSAction({
         type: "addAgentWorkItem",
-        payload: {
-          projectId,
-          agentId: agentId as KnownAgentId,
-          title: title.trim(),
-          instructions: instructions.trim()
-        }
+        payload: { projectId, agentId: (agentId === "auto" ? "codex" : agentId) as KnownAgentId, title: title.trim(), instructions: instructions.trim() }
       });
       publishMyOSData(next);
       setTitle("");
       setInstructions("");
-      setMessage("工作项已加入队列。Agent 需要在项目内领取、推进并提交汇报。");
+      setConfirming(false);
+      setMessage("已创建工作项，但 Runtime 没有返回执行 ID。");
     } catch (dispatchFailure) {
-      setDispatchError(dispatchFailure instanceof Error ? dispatchFailure.message : "派发工作失败，请稍后重试。");
+      setDispatchError(dispatchFailure instanceof Error ? dispatchFailure.message : "启动执行失败。");
     } finally {
       setDispatching(false);
     }
@@ -85,7 +108,7 @@ export function AgentControlCenter() {
       </section>
 
       <section className="agent-dispatch panel" aria-labelledby="agent-dispatch-heading">
-        <div className="agent-dispatch-copy"><p className="eyebrow"><ClipboardPlus size={14} aria-hidden /> 统一派发</p><h2 id="agent-dispatch-heading">把一件明确的工作交给 Agent</h2><p>MyOS 只记录真实任务、进度与汇报；创建后再由对应 Agent 通过项目上下文、CLI 或 MCP 执行。</p></div>
+        <div className="agent-dispatch-copy"><p className="eyebrow"><ClipboardPlus size={14} aria-hidden /> 统一派发</p><h2 id="agent-dispatch-heading">把一件明确的工作交给 Agent</h2><p>选择项目和 Agent 后，MyOS 会创建工作项、检查权限，并在 allowlist 目录中启动已接入的 CLI。</p></div>
         <div className="agent-dispatch-templates" aria-label="工作模板">
           <button type="button" onClick={() => chooseTemplate("梳理项目现状", "先阅读项目简报、技术栈和现有工作项，输出当前风险、下一步与建议拆分。")}>梳理现状</button>
           <button type="button" onClick={() => chooseTemplate("实现下一项功能", "先阅读项目简报和现有代码，完成当前下一步行动，运行相关检查后提交进度汇报。")}>实现功能</button>
@@ -93,10 +116,27 @@ export function AgentControlCenter() {
         </div>
         <div className="agent-dispatch-form">
           <select value={projectId} onChange={(event) => setProjectId(event.target.value)} aria-label="选择项目"><option value="">选择项目</option>{dispatchProjects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select>
-          <select value={agentId} onChange={(event) => setAgentId(event.target.value)} aria-label="选择 Agent">{agentRegistry.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}</select>
-          <input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={200} placeholder="这件工作要完成什么？" aria-label="工作标题" />
-          <textarea value={instructions} onChange={(event) => setInstructions(event.target.value)} maxLength={4000} placeholder="补充范围、约束、验收方式或要读取的资料。" aria-label="工作说明" />
-          <button className="primary-button" type="button" onClick={() => void dispatch()} disabled={dispatching || !projectId || !title.trim() || !instructions.trim()}><Send size={15} aria-hidden />{dispatching ? "派发中" : "加入 Agent 队列"}</button>
+          <select value={agentId} onChange={(event) => setAgentId(event.target.value)} aria-label="选择 Agent">
+            <option value="auto">Auto Agent</option>
+            {agentRegistry.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}
+          </select>
+          <select value={permissionProfile} onChange={(event) => setPermissionProfile(event.target.value as typeof permissionProfile)} aria-label="权限档位">
+            <option value="safe">Safe</option>
+            <option value="standard">Standard</option>
+            <option value="advanced">Advanced</option>
+          </select>
+          <input value={title} onChange={(event) => { setTitle(event.target.value); setConfirming(false); }} maxLength={200} placeholder="这件工作要完成什么？" aria-label="工作标题" />
+          <textarea value={instructions} onChange={(event) => { setInstructions(event.target.value); setConfirming(false); }} maxLength={4000} placeholder="补充范围、约束、验收方式或要读取的资料。" aria-label="工作说明" />
+          {confirming ? (
+            <div className="agent-config-result" role="status">
+              <p><strong>Agent</strong> {agentId === "auto" ? "自动选择（优先 Codex）" : getAgent(agentId)?.name}</p>
+              <p><strong>Project</strong> {selectedProject?.name}</p>
+              <p><strong>Working Directory</strong> {selectedProject?.path || "需在本地 allowlist 中"}</p>
+              <p><strong>Permission Profile</strong> {permissionProfile}</p>
+              <p><strong>Expected Actions</strong> {permissionProfile === "safe" ? "读取并修改当前项目，运行检查" : permissionProfile === "advanced" ? "修改项目、安装依赖、测试与有限 Git" : "修改项目、安装依赖、运行 typecheck/lint/test"}</p>
+            </div>
+          ) : null}
+          <button className="primary-button" type="button" onClick={() => void dispatch()} disabled={dispatching || !projectId || !title.trim() || !instructions.trim()}><Send size={15} aria-hidden />{dispatching ? "启动中" : confirming ? "确认开始执行" : "开始执行"}</button>
         </div>
         {message ? <p className="config-message">{message}</p> : null}{dispatchError ? <p className="form-error">{dispatchError}</p> : null}
       </section>

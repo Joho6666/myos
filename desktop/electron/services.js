@@ -9,8 +9,10 @@ const bootstrap = require("./bootstrap");
 
 let webProcess = null;
 let agentProcess = null;
+let pythonProcess = null;
 let webPort = 0;
 let agentInfo = null;
+let pythonInfo = null;
 
 function openLog(name) {
   return fs.openSync(path.join(paths.logDir, `${name}.log`), "a");
@@ -71,6 +73,9 @@ async function startWebServer() {
       // 本地助手连接信息由主进程注入，用户无需手动配置 token
       LOCAL_AGENT_BASE_URL: `http://127.0.0.1:${agentInfo ? agentInfo.port : bootstrap.AGENT_PORT}`,
       LOCAL_AGENT_TOKEN: agentInfo ? agentInfo.token : "",
+      PYTHON_AGENT_BASE_URL: "http://127.0.0.1:43200",
+      MYOS_PYTHON_AGENT_TOKEN: pythonInfo ? pythonInfo.token : fileEnv.MYOS_PYTHON_AGENT_TOKEN || "",
+      MYOS_AGENT_CONFIG: paths.agentConfigPath,
       NEXT_PUBLIC_APP_URL: fileEnv.NEXT_PUBLIC_APP_URL || `http://127.0.0.1:${webPort}`
     },
     onExit: () => {
@@ -140,11 +145,12 @@ function killProcessTree(child) {
 }
 
 function stopAll() {
-  for (const child of [webProcess, agentProcess]) {
+  for (const child of [webProcess, agentProcess, pythonProcess]) {
     killProcessTree(child);
   }
   webProcess = null;
   agentProcess = null;
+  pythonProcess = null;
 }
 
 async function restartAll() {
@@ -163,6 +169,8 @@ module.exports = {
   restartAll,
   getWebPort: () => webPort,
   getAgentInfo: () => agentInfo,
+  getPythonInfo: () => pythonInfo,
   isWebRunning: () => Boolean(webProcess),
-  isAgentRunning: () => Boolean(agentProcess)
+  isAgentRunning: () => Boolean(agentProcess),
+  isPythonRunning: () => Boolean(pythonProcess)
 };

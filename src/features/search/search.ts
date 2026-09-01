@@ -91,6 +91,7 @@ export function searchMyOS(data: MyOSData, query: string): SearchResult[] {
     })),
     { type: "系统", title: "连接看板", summary: "GitHub、Gmail、Notion、数据库、AI 和 n8n 状态", href: "/app/integrations" },
     { type: "系统", title: "Agent 控制中心", summary: "查看项目执行、阻塞项和 Agent 汇报", href: "/app/agents" },
+    { type: "系统", title: "执行中心", summary: "运行中的 Agent、审批、Diff、验证和回滚", href: "/app/executions" },
     { type: "系统", title: "派发 Agent 工作", summary: "为已有项目创建带范围与验收要求的 Agent 工作项", href: "/app/agents" },
     { type: "系统", title: "工作地图", summary: "项目工作树、Agent 执行状态和项目负载图", href: "/app/work-map" },
     { type: "系统", title: "能力中心", summary: "管理 MCP、Skills 和 API 配置状态", href: "/app/capabilities" },

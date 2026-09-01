@@ -43,14 +43,20 @@ function createTray(actions) {
   if (tray) return tray;
 
   tray = new Tray(trayIcon());
-  tray.setToolTip("MyOS");
+      tray.setToolTip(actions.tooltip || "MyOS");
   tray.setContextMenu(buildMenu(actions));
   tray.on("double-click", actions.show);
   return tray;
 }
 
 function refreshTray(actions) {
-  if (tray) tray.setContextMenu(buildMenu(actions));
+  if (!tray) return;
+  tray.setToolTip(actions.tooltip || "MyOS");
+  tray.setContextMenu(buildMenu(actions));
+}
+
+function setTooltip(text) {
+  if (tray) tray.setToolTip(text || "MyOS");
 }
 
 function destroyTray() {
@@ -60,4 +66,4 @@ function destroyTray() {
   }
 }
 
-module.exports = { createTray, refreshTray, destroyTray };
+module.exports = { createTray, refreshTray, destroyTray, setTooltip };

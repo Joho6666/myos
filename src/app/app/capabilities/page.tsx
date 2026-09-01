@@ -11,7 +11,7 @@ type CapabilityData = {
   mcpServers: Array<{ id: string; name: string; status: "ready" | "needs_config"; detail: string; config: string }>;
   apiFields: Array<{ key: string; label: string; group: string; configured: boolean; secret: boolean; description: string }>;
   localAgent: { configured: boolean; connected: boolean; message: string; projects: Array<{ id: string; name: string }> };
-  pythonAgent: { configured: boolean; connected: boolean; message: string; baseUrl: string; version?: string; myosConfigured?: boolean; agents: Array<{ id: string; label: string; available: boolean; executionMode: "manual" | "adapter"; detail: string }> };
+  pythonAgent: { configured: boolean; connected: boolean; message: string; baseUrl: string; version?: string; myosConfigured?: boolean; agents: Array<{ id: string; label: string; available: boolean; installed?: boolean; executionMode: "manual" | "adapter"; version?: string | null; detail: string }> };
 };
 
 type AgentMcpPreview = { supported: boolean; configured: boolean; applied?: boolean; target?: string; targetExists?: boolean; backup?: string | null; detail: string; confirmation?: string | null };
@@ -114,7 +114,7 @@ export default function CapabilitiesPage() {
     </section>
     <section className="panel runtime-status-panel">
       <div className="panel-header"><h2><Cpu size={17} aria-hidden /> Python Agent Runtime</h2><span className={`badge ${data?.pythonAgent.connected ? "success" : "warning"}`}>{data?.pythonAgent.connected ? "在线" : "未连接"}</span></div>
-      <p className="row-subtitle">负责读取项目上下文、创建 Agent 工作项、接收心跳和汇报；当前不会执行任意电脑命令。</p>
+      <p className="row-subtitle">负责读取项目上下文、创建工作项，并在 allowlist 目录中启动已核验的 Agent CLI。不会读取 Agent 登录凭据。</p>
       <div className="runtime-status-grid">
         <span>地址<strong>{data?.pythonAgent.baseUrl || "-"}</strong></span>
         <span>版本<strong>{data?.pythonAgent.version || "-"}</strong></span>
@@ -122,7 +122,20 @@ export default function CapabilitiesPage() {
         <span>Agent 目标<strong>{data?.pythonAgent.agents.length || 0}</strong></span>
       </div>
       <p className="row-subtitle">{data?.pythonAgent.message || "正在读取运行时状态。"}</p>
-      <Link className="text-button" href="/app/settings">配置运行时</Link>
+      <div className="table-list">
+        {data?.pythonAgent.agents.map((agent) => (
+          <div className="row" key={agent.id}>
+            <span>
+              <span className="row-title">{agent.label}</span>
+              <span className="row-subtitle">{agent.detail}{agent.version ? ` · ${agent.version}` : ""}</span>
+            </span>
+            <span className={`badge ${agent.available ? "success" : "warning"}`}>
+              {agent.available ? "Available" : agent.installed ? "Unsupported" : "Unavailable"}
+            </span>
+          </div>
+        ))}
+      </div>
+      <Link className="text-button" href="/app/executions">打开执行中心</Link>
     </section>
     <div className="capability-summary">
       <div><Wrench size={18} aria-hidden /><span>已发现 Skills<strong>{data?.skills.length ?? "-"}</strong></span></div>

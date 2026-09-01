@@ -3,16 +3,17 @@ import type { CapacitorConfig } from "@capacitor/cli";
 const config: CapacitorConfig = {
   appId: "com.joho.myos",
   appName: "MyOS",
-  webDir: "public",
-  server: {
-    // 默认可指定云端部署地址（例如 https://myos.vercel.app）或局域网 IP
-    // 如果设置了环境变量 CAPACITOR_SERVER_URL 则优先使用
-    url: process.env.CAPACITOR_SERVER_URL || "https://myos-mobile.vercel.app/login",
-    cleartext: true
-  },
+  // Release APK bundles the complete offline web app. Do not add `server.url`:
+  // a remote URL would turn the app back into a network-dependent WebView.
+  webDir: "apps/mobile/dist",
   android: {
     allowMixedContent: true,
     backgroundColor: "#0f172a"
+  },
+  plugins: {
+    CapacitorSQLite: {
+      androidIsEncryption: true
+    }
   }
 };
 
