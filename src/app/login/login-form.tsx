@@ -30,13 +30,22 @@ export function LoginForm({ ownerEmail }: { ownerEmail: string }) {
           required
         />
       </label>
+      <label>
+        <span>访问口令</span>
+        <input
+          name="accessCode"
+          type="password"
+          autoComplete="current-password"
+          placeholder="配置了 MYOS_ACCESS_CODE 时必填"
+        />
+      </label>
       {state.error ? <p className="form-error">{state.error}</p> : null}
       <button type="submit" disabled={pending}>
         {pending ? "正在验证" : "进入工作台"}
         <ArrowRight size={16} aria-hidden />
       </button>
       <p className="login-note">
-        第一版使用本地安全会话演示单用户保护。配置 Supabase 后，可切换为 Magic Link 或密码登录。
+        本机访问只需邮箱；远程访问需要在服务端配置 MYOS_ACCESS_CODE 并输入对应口令。
       </p>
     </form>
   );

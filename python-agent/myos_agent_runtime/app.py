@@ -65,7 +65,15 @@ def create_app(config: RuntimeConfig | None = None, client: MyOSClient | None = 
 
     @app.get("/jobs", dependencies=[protected])
     async def jobs(project_id: Annotated[str, Query(alias="projectId", min_length=1)]) -> dict[str, Any]:
-        return await _call(lambda: myos_client.get_brief(project_id))
+        async def load_jobs() -> dict[str, Any]:
+            brief = await myos_client.get_brief(project_id)
+            return {
+                "projectId": project_id,
+                "jobs": brief.get("workItems", []),
+                "evidence": brief.get("reports", []),
+            }
+
+        return await _call(load_jobs)
 
     @app.post("/jobs", dependencies=[protected])
     async def create_job(request: CreateJobRequest):

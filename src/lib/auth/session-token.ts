@@ -7,7 +7,8 @@ export type SessionTokenPayload = {
 };
 
 function getSessionSecret() {
-  return process.env.MYOS_SESSION_SECRET?.trim() || process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || "";
+  // 会话签名密钥必须独立配置，不能与 Supabase service role key 共用，避免一份泄漏同时失守两者。
+  return process.env.MYOS_SESSION_SECRET?.trim() || "";
 }
 
 function encodeBase64Url(bytes: Uint8Array) {

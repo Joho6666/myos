@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import { getOwnerEmail, type MyOSSession } from "@/lib/auth/session";
 import { applyMyOSActionToRepository, readMyOSData } from "@/server/data/repository";
 import { myOSActionSchema } from "@/server/data/schemas";
@@ -8,7 +9,11 @@ export const dynamic = "force-dynamic";
 
 function isAuthorized(request: Request) {
   const token = process.env.MYOS_CLI_TOKEN?.trim();
-  return Boolean(token) && request.headers.get("authorization") === `Bearer ${token}`;
+  const header = request.headers.get("authorization") || "";
+  if (!token || !header) return false;
+  const provided = Buffer.from(header);
+  const expected = Buffer.from(`Bearer ${token}`);
+  return provided.length === expected.length && timingSafeEqual(provided, expected);
 }
 
 function trustedCliSession(): MyOSSession {

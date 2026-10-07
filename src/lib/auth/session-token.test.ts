@@ -28,4 +28,12 @@ describe("signed MyOS session tokens", () => {
     process.env.MYOS_SESSION_SECRET = "different-secret";
     await expect(verifySessionToken(token)).resolves.toBeNull();
   });
+
+  it("does not fall back to the Supabase service role key", async () => {
+    delete process.env.MYOS_SESSION_SECRET;
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role-key";
+
+    await expect(createSessionToken("owner@example.com")).rejects.toThrow();
+    await expect(verifySessionToken("a.b")).resolves.toBeNull();
+  });
 });

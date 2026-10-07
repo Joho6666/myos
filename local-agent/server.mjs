@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import { timingSafeEqual } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
@@ -22,7 +23,7 @@ async function readConfig() {
       allowedProjects: Array.isArray(config.allowedProjects) ? config.allowedProjects : [],
       allowedScripts: Array.isArray(config.allowedScripts) ? config.allowedScripts : [],
     ollamaBaseUrl: String(config.ollamaBaseUrl || "http://127.0.0.1:11434"),
-    myosUrl: String(config.myosUrl || "http://127.0.0.1:3002")
+    myosUrl: String(config.myosUrl || (process.env.MYOS_PORT ? `http://127.0.0.1:${process.env.MYOS_PORT}` : "http://127.0.0.1:3000"))
   };
 }
 
@@ -36,7 +37,10 @@ function sendJson(response, status, body) {
 
 function isAuthorized(request, token) {
   const header = request.headers.authorization || "";
-  return Boolean(token) && header === `Bearer ${token}`;
+  if (!token || !header) return false;
+  const provided = Buffer.from(header);
+  const expected = Buffer.from(`Bearer ${token}`);
+  return provided.length === expected.length && timingSafeEqual(provided, expected);
 }
 
 async function ollamaStatus(baseUrl) {

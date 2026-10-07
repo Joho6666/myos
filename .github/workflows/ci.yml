@@ -7,28 +7,46 @@ on:
     branches: [main]
 
 jobs:
-  ci:
+  web:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: pnpm
 
       - name: Install dependencies
-        run: |
-          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
-            npm ci
-          else
-            npm install
-          fi
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: npm run lint --if-present
+        run: pnpm lint
 
       - name: Typecheck
-        run: npm run typecheck --if-present
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
 
       - name: Build
-        run: npm run build --if-present
+        run: pnpm build
+
+  python-agent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r python-agent/requirements.txt
+
+      - name: Test
+        run: python -m unittest discover -s python-agent/tests -p "test_*.py"
